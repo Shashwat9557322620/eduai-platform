@@ -1,0 +1,233 @@
+"use client";
+import { useState } from 'react';
+import Navbar from '../components/Navbar';
+import ReactMarkdown from 'react-markdown';
+
+export default function SkillGapAnalyzer() {
+  const [role, setRole] = useState("");
+  const [skills, setSkills] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [analysis, setAnalysis] = useState("");
+
+  const handleAnalyze = async () => {
+    if (!role.trim() || !skills.trim()) {
+      alert("System Alert: Target Job Role aur Current Skills missing hai!");
+      return;
+    }
+
+    setLoading(true);
+    setAnalysis("");
+
+    try {
+      const response = await fetch('/api/analyzer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, skills }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      setAnalysis(data.analysis);
+    } catch (err: any) {
+      alert("Matrix Overload: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#020203] text-white relative selection:bg-fuchsia-500/30 overflow-hidden font-sans pb-32 z-0">
+      
+      {/* Cyber Grid Background */}
+      <div className="fixed inset-0 pointer-events-none -z-20 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+      
+      {/* Dynamic Colored Orbs */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[150px] animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-fuchsia-600/10 blur-[150px]" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <Navbar />
+
+      <div className="pt-36 px-6 max-w-7xl mx-auto relative z-10">
+        
+        {/* Header - Advanced Tech Vibe */}
+        <div className="text-center mb-16 flex flex-col items-center">
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/[0.02] border border-white/[0.08] text-xs font-bold tracking-widest mb-6 backdrop-blur-xl shadow-[0_0_20px_rgba(217,70,239,0.1)]">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-fuchsia-500 shadow-[0_0_10px_#d946ef]"></span>
+            </span>
+            <span className="text-gray-300 uppercase">Neural Diagnostics Active</span>
+          </div>
+          
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 uppercase drop-shadow-2xl">
+            Skill Gap <br className="md:hidden" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 via-fuchsia-400 to-pink-500">Analyzer.</span>
+          </h1>
+          <p className="text-gray-400 max-w-2xl text-lg font-medium">Deconstruct your target career path. Identify missing core capabilities, tech stacks, and generate a hyper-targeted roadmap.</p>
+        </div>
+
+        {/* Input Interface */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-16">
+          
+          {/* Main Terminal Box */}
+          <div className="lg:col-span-2 relative group h-full">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/30 via-fuchsia-500/30 to-indigo-500/30 rounded-[2rem] blur-md opacity-30 group-hover:opacity-60 transition duration-700 animate-gradient-x"></div>
+            
+            <div className="h-full bg-[#07070a]/90 backdrop-blur-3xl rounded-[1.8rem] p-8 border border-white/10 relative shadow-2xl flex flex-col space-y-8">
+              
+              {/* Fake Terminal Header */}
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                </div>
+                <span className="text-xs font-mono text-fuchsia-400/70 tracking-widest">sys.input_module</span>
+              </div>
+
+              <div className="flex-1 space-y-8">
+                <div className="relative">
+                  <label className="flex items-center gap-2 text-xs font-mono text-gray-400 mb-3 uppercase tracking-widest font-bold">
+                    <span className="text-indigo-400">01 //</span> Target Job Role
+                  </label>
+                  <input 
+                    type="text"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    placeholder="e.g. AI Engineer, Full Stack Developer..."
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl p-5 text-white text-lg font-medium focus:outline-none focus:border-indigo-500 focus:bg-indigo-500/5 focus:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-all placeholder:text-gray-600"
+                  />
+                </div>
+
+                <div className="relative flex-1 flex flex-col">
+                  <label className="flex items-center gap-2 text-xs font-mono text-gray-400 mb-3 uppercase tracking-widest font-bold">
+                    <span className="text-fuchsia-400">02 //</span> Current Skills / Resume
+                  </label>
+                  <textarea 
+                    value={skills}
+                    onChange={(e) => setSkills(e.target.value)}
+                    className="w-full flex-1 min-h-[220px] bg-white/[0.03] border border-white/10 rounded-xl p-5 text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-fuchsia-500 focus:bg-fuchsia-500/5 focus:shadow-[0_0_20px_rgba(217,70,239,0.2)] transition-all resize-none text-base leading-relaxed font-medium" 
+                    placeholder="Paste your current tech stack, soft skills, or entire resume text here..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Trigger Box */}
+          <div className="bg-[#07070a]/90 backdrop-blur-3xl border border-white/10 rounded-[1.8rem] p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+            {/* Corner Decor */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-[60px]"></div>
+            <div className="absolute top-4 right-4 text-white/5">
+              <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold text-gray-300 mb-4 uppercase tracking-widest flex items-center gap-2">
+                <span className="w-1.5 h-5 bg-gradient-to-b from-indigo-500 to-fuchsia-500 rounded-full shadow-[0_0_10px_#d946ef]"></span> Diagnostic Engine
+              </h3>
+              <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                The neural engine will cross-examine your provided data against live global technical hiring metrics and highlight exactly what you are missing.
+              </p>
+            </div>
+            
+            <div className="mt-8">
+              <button 
+                onClick={handleAnalyze}
+                disabled={loading}
+                className={`group w-full h-20 rounded-2xl font-black text-xl transition-all duration-300 relative overflow-hidden
+                  ${loading ? 'bg-[#111] text-indigo-400 border border-indigo-500/30' : 'bg-white text-black hover:scale-[1.02] shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_50px_rgba(217,70,239,0.4)]'}`}
+              >
+                {/* Laser Scanning Animation when loading */}
+                {loading && <div className="absolute inset-0 w-full h-1 bg-gradient-to-r from-transparent via-fuchsia-400 to-transparent opacity-80 animate-scan"></div>}
+                
+                {loading ? (
+                  <span className="flex items-center justify-center gap-3 relative z-10 font-mono tracking-wider">
+                    <span className="w-3 h-3 bg-fuchsia-500 rounded-full animate-ping"></span>
+                    ANALYZING...
+                  </span>
+                ) : (
+                  <span className="relative z-10 flex items-center justify-center gap-3">
+                    Execute Audit
+                    <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Premium Extreme Output Section */}
+        {analysis && (
+          <div className="relative mt-16 group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600/40 via-fuchsia-500/40 to-indigo-600/40 rounded-3xl blur-xl opacity-50 group-hover:opacity-80 transition duration-700 animate-gradient-x"></div>
+            
+            <div className="bg-[#050508]/95 backdrop-blur-3xl border border-fuchsia-500/30 rounded-3xl p-8 md:p-14 shadow-2xl relative animate-in fade-in slide-in-from-bottom-10 duration-700">
+              
+              {/* HUD Header */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 pb-8 border-b border-white/10 relative">
+                <div className="flex items-center gap-5">
+                  <div className="relative p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/40 shadow-[0_0_30px_rgba(99,102,241,0.3)]">
+                    <svg className="w-8 h-8 text-indigo-400 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
+                    {/* Radar Ping */}
+                    <div className="absolute inset-0 border-2 border-indigo-400 rounded-2xl animate-ping opacity-20"></div>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black text-white tracking-tight uppercase">Skill Matrix Breakdown</h2>
+                    <p className="text-fuchsia-400 font-mono text-sm mt-1">Status: Decoded & Verified</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Custom Styled Markdown */}
+              <div className="text-gray-300 font-medium">
+                <ReactMarkdown
+                  components={{
+                    h1: ({node, ...props}) => <h1 className="text-4xl font-black text-white mb-8 mt-12 uppercase drop-shadow-md" {...props} />,
+                    h2: ({node, ...props}) => <div className="mt-12 mb-6"><h2 className="inline-block text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400 border-b-2 border-fuchsia-500/30 pb-2" {...props} /></div>,
+                    h3: ({node, ...props}) => <h3 className="text-xl font-bold text-white mb-4 mt-8 flex items-center gap-2 before:content-['>'] before:text-fuchsia-500" {...props} />,
+                    p: ({node, ...props}) => <p className="mb-6 text-gray-300 leading-relaxed text-lg" {...props} />,
+                    ul: ({node, ...props}) => <ul className="mb-8 space-y-4" {...props} />,
+                    li: ({node, ...props}) => (
+                      <li className="flex items-start text-gray-300 bg-white/[0.02] p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-colors" {...props}>
+                         <span className="text-indigo-400 mr-4 mt-0.5 font-bold text-xl leading-none">▹</span>
+                         <span>{props.children}</span>
+                      </li>
+                    ),
+                    strong: ({node, ...props}) => <strong className="text-white font-bold bg-fuchsia-500/10 border border-fuchsia-500/20 px-2 py-0.5 rounded shadow-[0_0_10px_rgba(217,70,239,0.1)]" {...props} />,
+                  }}
+                >
+                  {analysis}
+                </ReactMarkdown>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Extreme Premium Keyframes */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes scan {
+          0% { transform: translateY(-100%); }
+          50% { transform: translateY(80px); }
+          100% { transform: translateY(-100%); }
+        }
+        .animate-scan {
+          animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .animate-gradient-x {
+          background-size: 200% 200%;
+          animation: gradient-x 15s ease infinite;
+        }
+      `}} />
+    </div>
+  );
+}
