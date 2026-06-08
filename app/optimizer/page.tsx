@@ -1,8 +1,11 @@
 "use client";
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import MouseTrail from '../components/MouseTrail';
+import MagneticCursor from '../components/MagneticCursor';
 import { supabase } from '../../lib/supabaseClient';
+import { useUser } from '@clerk/nextjs';
+import UnifiedBackground from '../components/UnifiedBackground';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 // Types
 interface TimetableSlot {
@@ -19,6 +22,7 @@ interface DayProtocol {
 }
 
 export default function Optimizer() {
+  const { user } = useUser();
   const [syllabus, setSyllabus] = useState('');
   const [days, setDays] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -48,7 +52,7 @@ export default function Optimizer() {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ syllabus, days }),
+        body: JSON.stringify({ syllabus, days, userId: user?.id }),
       });
 
       const data = await response.json();
@@ -68,14 +72,15 @@ export default function Optimizer() {
 
       if (dbError) console.error("Supabase Save Error:", dbError);
 
-    } catch (err: any) {
-      setError(err.message || "An unknown error occurred.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred.");
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[#030305] text-white font-sans relative overflow-x-hidden selection:bg-cyan-500/30">
 
       {/* Background Glows */}
@@ -84,7 +89,7 @@ export default function Optimizer() {
         <div className="absolute top-1/4 right-0 w-[50vw] h-[50vw] bg-purple-900/10 rounded-full blur-[150px] animate-pulse-slow delay-1000"></div>
       </div>
 
-      <div className="hidden md:block"><MouseTrail /></div>
+      <MagneticCursor />
       <Navbar />
 
       <div className="pt-32 pb-20 px-4 md:px-8 max-w-5xl mx-auto relative z-10 flex flex-col min-h-[90vh]">
@@ -244,20 +249,8 @@ export default function Optimizer() {
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .cyber-box { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%); }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #000; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.3); border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(6, 182, 212, 0.6); }
-        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in-up { animation: fade-in-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; opacity: 0; }
-        @keyframes fade-in-right { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-        .animate-fade-in-right { animation: fade-in-right 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; opacity: 0; }
-        @keyframes pulse-slow { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.05); } }
-        .animate-pulse-slow { animation: pulse-slow 8s infinite; }
-      `}} />
+
     </div>
+    </ErrorBoundary>
   );
 }

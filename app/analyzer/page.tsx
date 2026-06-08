@@ -1,17 +1,27 @@
 "use client";
 import { useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 import Navbar from '../components/Navbar';
 import ReactMarkdown from 'react-markdown';
+import UnifiedBackground from '../components/UnifiedBackground';
+import GlitchText from '../components/GlitchText';
+import ShareButton from '../components/ShareButton';
+import CopyFullContent from '../components/CopyFullContent';
+import RatingWidget from '../components/RatingWidget';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 export default function SkillGapAnalyzer() {
+  const { user } = useUser();
   const [role, setRole] = useState("");
   const [skills, setSkills] = useState("");
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
+    setError(null);
     if (!role.trim() || !skills.trim()) {
-      alert("System Alert: Target Job Role aur Current Skills missing hai!");
+      setError("SYSTEM ALERT: Please enter both Target Job Role and Current Skills!");
       return;
     }
 
@@ -22,31 +32,28 @@ export default function SkillGapAnalyzer() {
       const response = await fetch('/api/analyzer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role, skills }),
+        body: JSON.stringify({ role, skills, userId: user?.id }),
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
       setAnalysis(data.analysis);
-    } catch (err: any) {
-      alert("Matrix Overload: " + err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Matrix Overload");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#020203] text-white relative selection:bg-fuchsia-500/30 overflow-hidden font-sans pb-32 z-0">
+    <ErrorBoundary>
+    <div className="min-h-screen bg-[#020203] text-white relative selection:bg-fuchsia-500/30 overflow-hidden font-sans pb-32 z-0 ">
       
       {/* Cyber Grid Background */}
       <div className="fixed inset-0 pointer-events-none -z-20 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]"></div>
       
-      {/* Dynamic Colored Orbs */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[150px] animate-pulse"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-fuchsia-600/10 blur-[150px]" style={{ animationDelay: '2s' }}></div>
-      </div>
+      <UnifiedBackground />
 
       <Navbar />
 
@@ -54,7 +61,7 @@ export default function SkillGapAnalyzer() {
         
         {/* Header - Advanced Tech Vibe */}
         <div className="text-center mb-16 flex flex-col items-center">
-          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/[0.02] border border-white/[0.08] text-xs font-bold tracking-widest mb-6 backdrop-blur-xl shadow-[0_0_20px_rgba(217,70,239,0.1)]">
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-bold tracking-widest mb-6 animate-shimmer-overlay shadow-[0_0_20px_rgba(217,70,239,0.1)]">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-fuchsia-500 shadow-[0_0_10px_#d946ef]"></span>
@@ -63,20 +70,32 @@ export default function SkillGapAnalyzer() {
           </div>
           
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 uppercase drop-shadow-2xl">
-            Skill Gap <br className="md:hidden" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 via-fuchsia-400 to-pink-500">Analyzer.</span>
+            <GlitchText text="Skill Gap" tag="span" autoGlitch autoGlitchInterval={7000} />
+            <br className="md:hidden" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 via-fuchsia-400 to-pink-500">
+              <GlitchText text="Analyzer." tag="span" autoGlitch autoGlitchInterval={5000} />
+            </span>
           </h1>
           <p className="text-gray-400 max-w-2xl text-lg font-medium">Deconstruct your target career path. Identify missing core capabilities, tech stacks, and generate a hyper-targeted roadmap.</p>
         </div>
+        
+        {error && (
+          <div className="mb-4 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm font-mono flex items-center gap-3 animate-pulse">
+            <span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
+            {error}
+          </div>
+        )}
+
+
 
         {/* Input Interface */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-16">
           
           {/* Main Terminal Box */}
           <div className="lg:col-span-2 relative group h-full">
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/30 via-fuchsia-500/30 to-indigo-500/30 rounded-[2rem] blur-md opacity-30 group-hover:opacity-60 transition duration-700 animate-gradient-x"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/30 via-fuchsia-500/30 to-indigo-500/30 rounded-[2rem] opacity-40 group-hover:opacity-70 transition duration-700 animate-gradient-x"></div>
             
-            <div className="h-full bg-[#07070a]/90 backdrop-blur-3xl rounded-[1.8rem] p-8 border border-white/10 relative shadow-2xl flex flex-col space-y-8">
+            <div className="h-full bg-[#07070a] rounded-[1.8rem] p-8 border border-white/10 relative shadow-2xl flex flex-col space-y-8">
               
               {/* Fake Terminal Header */}
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
@@ -118,9 +137,9 @@ export default function SkillGapAnalyzer() {
           </div>
 
           {/* Action Trigger Box */}
-          <div className="bg-[#07070a]/90 backdrop-blur-3xl border border-white/10 rounded-[1.8rem] p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+          <div className="bg-[#07070a] border border-white/10 rounded-[1.8rem] p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
             {/* Corner Decor */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-[60px]"></div>
+            <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 animate-pulse-soft rounded-full"></div>
             <div className="absolute top-4 right-4 text-white/5">
               <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
@@ -141,6 +160,7 @@ export default function SkillGapAnalyzer() {
                 className={`group w-full h-20 rounded-2xl font-black text-xl transition-all duration-300 relative overflow-hidden
                   ${loading ? 'bg-[#111] text-indigo-400 border border-indigo-500/30' : 'bg-white text-black hover:scale-[1.02] shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_50px_rgba(217,70,239,0.4)]'}`}
               >
+                {!loading && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />}
                 {/* Laser Scanning Animation when loading */}
                 {loading && <div className="absolute inset-0 w-full h-1 bg-gradient-to-r from-transparent via-fuchsia-400 to-transparent opacity-80 animate-scan"></div>}
                 
@@ -163,9 +183,9 @@ export default function SkillGapAnalyzer() {
         {/* Premium Extreme Output Section */}
         {analysis && (
           <div className="relative mt-16 group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600/40 via-fuchsia-500/40 to-indigo-600/40 rounded-3xl blur-xl opacity-50 group-hover:opacity-80 transition duration-700 animate-gradient-x"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600/40 via-fuchsia-500/40 to-indigo-600/40 rounded-3xl opacity-60 group-hover:opacity-90 transition duration-700 animate-gradient-x"></div>
             
-            <div className="bg-[#050508]/95 backdrop-blur-3xl border border-fuchsia-500/30 rounded-3xl p-8 md:p-14 shadow-2xl relative animate-in fade-in slide-in-from-bottom-10 duration-700">
+            <div className="bg-[#050508] border border-fuchsia-500/30 rounded-3xl p-8 md:p-14 shadow-2xl relative">
               
               {/* HUD Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 pb-8 border-b border-white/10 relative">
@@ -204,30 +224,25 @@ export default function SkillGapAnalyzer() {
                 </ReactMarkdown>
               </div>
             </div>
+n
+            {/* Share, Copy & Rating */}
+            <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+                <CopyFullContent text={analysis} />
+                <ShareButton 
+                  title={`Skill Gap Analysis for ${role}`}
+                  text={analysis}
+                />
+              </div>
+              <RatingWidget />
+            </div>
           </div>
+
         )}
 
       </div>
 
-      {/* Extreme Premium Keyframes */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes scan {
-          0% { transform: translateY(-100%); }
-          50% { transform: translateY(80px); }
-          100% { transform: translateY(-100%); }
-        }
-        .animate-scan {
-          animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-        @keyframes gradient-x {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        .animate-gradient-x {
-          background-size: 200% 200%;
-          animation: gradient-x 15s ease infinite;
-        }
-      `}} />
     </div>
+    </ErrorBoundary>
   );
 }

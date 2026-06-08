@@ -1,6 +1,9 @@
 "use client";
 import { useState } from 'react';
 import Navbar from '../components/Navbar';
+import { useUser } from '@clerk/nextjs';
+import AmbientBackground from '../components/AmbientBackground';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 interface Flashcard {
   front: string;
@@ -8,44 +11,48 @@ interface Flashcard {
 }
 
 export default function FlashcardGenerator() {
+  const { user } = useUser();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [cards, setCards] = useState<Flashcard[]>([]);
-  const [flipped, setFlipped] = useState<number[]>([]);
+  const [flipped, setFlipped] = useState<Set<number>>(new Set());
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
+    setError(null);
     if (!text.trim()) {
-      alert("Bhai, notes daale bina dimaag mein knowledge kaise ghusega? Kuch toh daal!");
+      setError("SYSTEM ALERT: Please enter some text to generate flashcards!");
       return;
     }
     setLoading(true);
     setCards([]);
-    setFlipped([]);
+    setFlipped(new Set());
     try {
       const response = await fetch('/api/flashcards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, userId: user?.id }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setCards(data.flashcards);
-    } catch (err: any) {
-      alert("Engine Overheated: " + err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Matrix Overload");
     } finally {
       setLoading(false);
     }
   };
 
   const toggleFlip = (index: number) => {
-    if (flipped.includes(index)) {
-      setFlipped(flipped.filter(i => i !== index));
-    } else {
-      setFlipped([...flipped, index]);
-    }
+    setFlipped(prev => {
+      const next = new Set(prev);
+      next.has(index) ? next.delete(index) : next.add(index);
+      return next;
+    });
   };
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[#020203] text-white relative selection:bg-cyan-500/30 font-sans pb-32 overflow-hidden">
       
       {/* Premium Antigravity & Liquid Background */}
@@ -72,6 +79,13 @@ export default function FlashcardGenerator() {
           </h1>
           <p className="text-gray-400 max-w-3xl mx-auto text-xl leading-relaxed">Inject raw knowledge into the system. Our neural matrix constructs multidimensional, interactive memory units for instant recall.</p>
         </div>
+
+        {error && (
+          <div className="mb-4 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm font-mono flex items-center gap-3 animate-pulse">
+            <span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
+            {error}
+          </div>
+        )}
 
         {/* Floating Input Section (Glassmorphism) */}
         <div className="relative group max-w-4xl mx-auto mb-20 animate-float">
@@ -133,7 +147,7 @@ export default function FlashcardGenerator() {
                 onClick={() => toggleFlip(index)}
               >
                 {/* Floating Antigravity Effect on Hover */}
-                <div className={`w-full h-full transition-transform duration-[800ms] transform-style-3d group-hover:-translate-y-4 ${flipped.includes(index) ? 'rotate-y-180' : ''}`}>
+                <div className={`w-full h-full transition-transform duration-[800ms] transform-style-3d group-hover:-translate-y-4 ${flipped.has(index) ? 'rotate-y-180' : ''}`}>
                   
                   {/* Front of Card (Frosted Glass + Liquid Glow) */}
                   <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-[#111] to-[#0a0a0c] border border-white/[0.08] rounded-3xl p-8 flex flex-col justify-center items-center text-center shadow-xl group-hover:border-purple-500/40 group-hover:shadow-[0_0_40px_rgba(168,85,247,0.15)] transition-all duration-500 overflow-hidden">
@@ -162,41 +176,7 @@ export default function FlashcardGenerator() {
         )}
       </div>
 
-      {/* Global Style overrides for Premium Animations & 3D */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .perspective-2000 { perspective: 2000px; }
-        .transform-style-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-
-        /* Liquid Background Animation */
-        @keyframes liquid-bg {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-50px, 40px) scale(1.1); }
-        }
-        .animate-liquid-bg { animation: liquid-bg 20s ease-in-out infinite; }
-
-        /* General Floating Animation */
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-        }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-
-        /* Liquid Glow inside Card Animation */
-        @keyframes liquid-card {
-          0% { transform: translateX(-50%) translateY(-50%) rotate(0deg); }
-          100% { transform: translateX(-50%) translateY(-50%) rotate(360deg); }
-        }
-        .animate-liquid-card { animation: liquid-card 8s linear infinite; }
-
-        /* Staggered Fade in Up Animation */
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(40px) scale(0.9); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .animate-fade-in-up { animation: fade-in-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-      `}} />
     </div>
+    </ErrorBoundary>
   )
 }

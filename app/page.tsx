@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import Navbar from "./components/Navbar";
-import MouseTrail from "./components/MouseTrail";
+import MagneticCursor from "./components/MagneticCursor";
+import Footer from "./components/footer";
+import Testimonials from "./components/Testimonials";
+import OnboardingTour from "./components/OnboardingTour";
+import UnifiedBackground from "./components/UnifiedBackground";
+import GlitchText from "./components/GlitchText";
+import { useParallax } from "./hooks/useParallax";
 import { useEffect, useRef } from "react";
 
 const CARDS = [
@@ -37,6 +43,7 @@ const CARDS = [
 
 export default function Home() {
   const cardsRef = useRef<(HTMLAnchorElement | null)[]>([]);
+  useParallax();
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent, card: HTMLElement) => {
@@ -81,33 +88,23 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#020203] text-white font-sans relative overflow-hidden selection:bg-white/20">
-      
-      {/* Ultra-premium background atmosphere */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-cyan-500/[0.03] blur-[120px] animate-breathe" />
-        <div className="absolute bottom-[-10%] right-[10%] w-[50vw] h-[50vw] rounded-full bg-purple-500/[0.03] blur-[120px] animate-breathe delay-1000" />
-        <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[40vw] h-[40vw] rounded-full bg-fuchsia-500/[0.02] blur-[100px] animate-breathe delay-2000" />
+    <>
+      <div className="min-h-screen bg-[var(--bg-primary,#020203)] text-white font-sans relative overflow-hidden selection:bg-white/20">
         
-        {/* Noise texture overlay for tactile premium feel */}
-        <div 
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
-          }}
-        />
-      </div>
-
-      <div className="hidden md:block"><MouseTrail /></div>
-      <Navbar />
+        <UnifiedBackground />
+        <MagneticCursor />
+        <Navbar />
+        <OnboardingTour />
 
       <div className="pt-32 pb-24 px-6 max-w-7xl mx-auto text-center relative z-10 flex flex-col items-center justify-center min-h-screen">
         
         {/* Hero typography with tighter tracking */}
-        <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-black tracking-tight leading-[1.05] mb-7">
-          Your AI Study <br className="md:hidden" />
+        <h1 
+          className="text-[clamp(2.5rem,6vw,5.5rem)] font-black tracking-tight leading-[1.05] mb-7 parallax-slow"
+          style={{ animation: 'hero-weight 4s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate' }}
+        >
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-400 animate-gradient-x">
-            Arsenal.
+            EduAI.
           </span>
         </h1>
 
@@ -220,68 +217,11 @@ export default function Home() {
           ))}
         </div>
       </div>
+      </div>
 
-      <style jsx global>{`
-        @keyframes cardEnter {
-          from {
-            opacity: 0;
-            transform: translateY(40px) scale(0.96);
-            filter: blur(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            filter: blur(0);
-          }
-        }
-        
-        .card-enter {
-          opacity: 0;
-          animation: cardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        
-        @keyframes breathe {
-          0%, 100% {
-            opacity: 0.3;
-            transform: scale(1) translate(0, 0);
-          }
-          33% {
-            opacity: 0.5;
-            transform: scale(1.05) translate(2%, -2%);
-          }
-          66% {
-            opacity: 0.4;
-            transform: scale(0.95) translate(-1%, 1%);
-          }
-        }
-        
-        .animate-breathe {
-          animation: breathe 12s ease-in-out infinite;
-        }
-        
-        .delay-1000 {
-          animation-delay: -4s;
-        }
-        
-        .delay-2000 {
-          animation-delay: -8s;
-        }
-        
-        @keyframes gradientX {
-          0%, 100% {
-            background-size: 200% 100%;
-            background-position: 0% 50%;
-          }
-          50% {
-            background-size: 200% 100%;
-            background-position: 100% 50%;
-          }
-        }
-        
-        .animate-gradient-x {
-          animation: gradientX 8s ease infinite;
-        }
-      `}</style>
-    </div>
+      <Testimonials />
+
+      <Footer />
+    </>
   );
 }

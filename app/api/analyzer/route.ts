@@ -1,10 +1,47 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { rateLimit } from '@/lib/rateLimit';
+import { analyzeSchema } from '@/lib/validation';
+import { checkAndDeductCredit, logUserHistory } from '@/lib/credits';
+import { headers } from 'next/headers';
+
+// Helper to log usage history to Supabase
+
 
 export async function POST(req: Request) {
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown';
+  if (!rateLimit(ip, 10, 60000)) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
+  let userId: string | null = null;
+  let body: Record<string, unknown> | null = null;
   try {
-    const { role, skills } = await req.json();
-    if (!role || !skills) {
-      return NextResponse.json({ error: "Job role and current skills are required" }, { status: 400 });
+    const { userId: authUserId } = await auth();
+    body = await req.json() as Record<string, unknown> | null;
+    userId = (body?.userId as string) || null;
+
+    if (!body) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    if (!body) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const validation = analyzeSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.flatten() }, { status: 400 });
+    }
+    const { role, skills } = validation.data;
+
+    if (!authUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const creditCheck = await checkAndDeductCredit(authUserId);
+    if (!creditCheck.ok) {
+      return NextResponse.json({ error: creditCheck.error || 'Credit limit exceeded' }, { status: 403 });
     }
 
     const apiKey = process.env.Gemini_Api_Key;
@@ -23,7 +60,6 @@ export async function POST(req: Request) {
     4. Actionable 30-60-90 Day Learning Path to bridge this gap.
     Use professional markdown headers and clean bullet points.`;
 
-    // ✅ SDK nahi, REST API — gemini-2.5-flash-lite free + working
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
@@ -47,8 +83,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ analysis });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Analyzer Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to analyze skills" }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to analyze skills" }, { status: 500 });
+  } finally {
+    if (userId && body) {
+      logUserHistory(userId, 'analyzer', `role: ${String(body?.role || '').slice(0, 50)}, skills: ${String(body?.skills || '').slice(0, 50)}`);
+    }
   }
 }

@@ -1,8 +1,9 @@
 "use client";
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import MouseTrail from '../components/MouseTrail';
-
+import MagneticCursor from '../components/MagneticCursor';
+import { useUser } from '@clerk/nextjs';
+import UnifiedBackground from '../components/UnifiedBackground';
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     const script = document.createElement('script');
@@ -14,17 +15,33 @@ const loadRazorpayScript = () => {
 };
 
 export default function Billing() {
+  const { user, isSignedIn } = useUser();
   const [currentCredits, setCurrentCredits] = useState(50);
   const [currentPlan, setCurrentPlan] = useState('Free Trial');
   const [isRedirecting, setIsRedirecting] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load actual user credits
+  React.useEffect(() => {
+    if (isSignedIn) {
+      fetch('/api/user/credits')
+        .then(res => res.json())
+        .then(data => {
+          setCurrentCredits(data.credits || 0);
+          setCurrentPlan(data.plan_name || 'Free Trial');
+        })
+        .catch(() => {});
+    }
+  }, [isSignedIn]);
 
   const handlePurchase = async (planName: string, creditAmount: number, price: number) => {
     setIsRedirecting(planName);
     
+    setError(null);
     try {
-      const res = await loadRazorpayScript();
-      if (!res) {
-        alert('Razorpay SDK failed to load. Please check your internet connection.');
+      const sdkLoaded = await loadRazorpayScript();
+      if (!sdkLoaded) {
+        setError('Razorpay SDK failed to load. Please check your internet connection.');
         setIsRedirecting(null);
         return;
       }
@@ -33,7 +50,7 @@ export default function Billing() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 'user_123', 
+          userId: user?.id || 'guest',
           creditAmount: creditAmount,
           price: price 
         }),
@@ -42,7 +59,7 @@ export default function Billing() {
       const orderData = await response.json();
 
       if (!orderData.orderId) {
-        alert("Server error. Razorpay order create nahi kar paya.");
+        setError("Server error. Razorpay order could not be created.");
         setIsRedirecting(null);
         return;
       }
@@ -58,26 +75,24 @@ export default function Billing() {
           color: '#06b6d4' 
         },
         handler: function (response: any) {
-          console.log("Payment Success ID:", response.razorpay_payment_id);
           window.location.href = `/billing/success?credits=${orderData.credits}`;
         },
         prefill: {
-          name: 'Premium User',
-          email: 'user@eduai.com',
-          contact: '9999999999' 
+          name: user?.fullName || 'Premium User',
+          email: user?.emailAddresses?.[0]?.emailAddress || 'user@eduai.com',
         }
       };
 
       const paymentObject = new (window as any).Razorpay(options);
       
       paymentObject.on('payment.failed', function (response: any) {
-        alert("Payment Failed: " + response.error.description);
+        setError("Payment Failed: " + response.error.description);
       });
       
       paymentObject.open();
 
     } catch (err) {
-      alert("Billing system error.");
+      setError("Billing system error. Please try again later.");
     } finally {
       setIsRedirecting(null);
     }
@@ -86,18 +101,21 @@ export default function Billing() {
   return (
     <div className="min-h-screen bg-[#020203] text-white font-sans relative overflow-x-hidden selection:bg-cyan-500/30">
       
-      {/* Background Lights */}
-      <div className="fixed inset-0 pointer-events-none z-0 flex justify-center items-center">
-        <div className="w-[80vw] h-[80vw] md:w-[50vw] md:h-[50vw] rounded-full bg-indigo-900/10 blur-[160px] animate-pulse"></div>
-        <div className="absolute top-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-cyan-900/10 rounded-full blur-[140px]"></div>
-      </div>
+      <UnifiedBackground />
 
-      <div className="hidden md:block"><MouseTrail /></div>
+      <MagneticCursor />
       <Navbar />
 
       <div className="pt-36 pb-20 px-4 md:px-8 max-w-6xl mx-auto relative z-10 min-h-screen flex flex-col justify-center">
         
-        <div className="text-center mb-16 animate-fade-in">
+        {error && (
+          <div className="mb-4 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm font-mono flex items-center gap-3 animate-pulse">
+            <span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
+            {error}
+          </div>
+        )}
+
+        <div className="text-center mb-16">
           <span className="text-xs font-mono text-cyan-400 tracking-[0.3em] uppercase border border-cyan-500/20 px-4 py-1.5 rounded-full bg-cyan-500/5">
             Billing & Core Quota
           </span>
@@ -218,77 +236,6 @@ export default function Billing() {
 
       </div>
 
-      {/* Bulletproof CSS */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .premium-pricing-card { 
-          position: relative; 
-          border-radius: 2rem; 
-          padding: 1.5px; 
-          /* 🔥 THE FIX: VISIBLE 🔥 */
-          overflow: visible; 
-          background: #000; 
-          display: flex; 
-          flex-direction: column; 
-          height: 100%; 
-          transform: translateY(0); 
-          transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), 
-                      box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        
-        .premium-pricing-card:hover { 
-          transform: translateY(-10px);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
-        }
-
-        .card-bg-glow { 
-          position: absolute; 
-          top: -20%; 
-          right: -20%; 
-          width: 70%; 
-          height: 70%; 
-          border-radius: 50%; 
-          filter: blur(60px); 
-          opacity: 0; 
-          pointer-events: none; 
-          transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1); 
-        }
-        
-        .premium-pricing-card:hover .card-bg-glow { 
-          opacity: 1; 
-        }
-
-        .card-border-line { 
-          position: absolute; 
-          inset: 0; 
-          border-radius: 2rem; 
-          background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%); 
-          z-index: 1; 
-          transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), 
-                      background 0.6s cubic-bezier(0.22, 1, 0.36, 1); 
-        }
-        
-        .premium-pricing-card:hover .card-border-line { 
-          background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%); 
-        }
-
-        .card-main-content { 
-          position: relative; 
-          background: rgba(10, 10, 14, 0.95); 
-          backdrop-filter: blur(20px); 
-          border-radius: calc(2rem - 1.5px); 
-          padding: 3rem 2rem; 
-          display: flex; 
-          flex-direction: column; 
-          height: 100%; 
-          z-index: 10; 
-          border: 1px solid rgba(255,255,255,0.02); 
-        }
-        
-        .tier-tag { font-family: monospace; font-size: 10px; letter-spacing: 0.2em; font-weight: bold; text-transform: uppercase; }
-        
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-in { animation: fade-in 0.8s ease forwards; }
-      `}} />
-    </div>
+      </div>
   );
 }

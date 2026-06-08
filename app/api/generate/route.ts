@@ -1,26 +1,42 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { rateLimit } from '@/lib/rateLimit';
+import { generateSchema } from '@/lib/validation';
+import { checkAndDeductCredit, logUserHistory } from '@/lib/credits';
+import { headers } from 'next/headers';
+
+
+
+
 
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const syllabus = body.syllabus;
-    const days = body.days || body.targetDays;
-    const userId = body.userId;
+  const ip = (await headers()).get('x-forwarded-for') || 'unknown';
+  if (!rateLimit(ip, 5, 60000)) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
 
-    if (!syllabus || !days) {
-      return NextResponse.json({ error: "Syllabus and Target Days are required." }, { status: 400 });
+  let userId: string | null = null;
+  let syllabus: string | null = null;
+  let days: string | null = null;
+  try {
+    const { userId: authUserId } = await auth();
+    const body = await req.json();
+    const validation = generateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.flatten() }, { status: 400 });
+    }
+    syllabus = validation.data.syllabus;
+    days = validation.data.days || validation.data.targetDays || null;
+    userId = validation.data.userId || null;
+
+    if (!authUserId || (userId && userId !== authUserId)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (userId) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const response = await fetch(`${supabaseUrl}/rest/v1/user_credits?user_id=eq.${userId}`, {
-        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-      });
-      const data = await response.json();
-      const userRecord = data[0];
-      if (userRecord && userRecord.credits <= 0) {
-        return NextResponse.json({ error: "CREDIT_LIMIT_EXCEEDED: No credits left. Please upgrade." }, { status: 403 });
+    if (authUserId) {
+      const creditCheck = await checkAndDeductCredit(authUserId);
+      if (!creditCheck.ok) {
+        return NextResponse.json({ error: creditCheck.error || 'CREDIT_LIMIT_EXCEEDED' }, { status: 403 });
       }
     }
 
@@ -45,7 +61,6 @@ export async function POST(req: Request) {
     
     Syllabus data to structure: ${syllabus}`;
 
-    // ✅ TERA EXACT SAME FETCH CODE (NO CHANGES HERE) ✅
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
@@ -69,8 +84,6 @@ export async function POST(req: Request) {
       throw new Error("No response from Gemini");
     }
 
-    // 🔥 THE FIX: BULLETPROOF JSON EXTRACTOR 🔥
-    // Ye AI ke kachre ko ignore karke sirf array extract karega
     let cleanText = planText.trim();
     const firstBracket = cleanText.indexOf('[');
     const lastBracket = cleanText.lastIndexOf(']');
@@ -83,24 +96,14 @@ export async function POST(req: Request) {
 
     const protocol = JSON.parse(cleanText);
 
-    if (userId) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      await fetch(`${supabaseUrl}/rest/v1/user_credits?user_id=eq.${userId}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ updated_at: new Date() })
-      });
-    }
-
     return NextResponse.json({ protocol });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini API Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to generate AI plan." }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to generate AI plan." }, { status: 500 });
+  } finally {
+    if (userId) {
+      logUserHistory(userId, 'optimizer', `syllabus: ${String(syllabus || '').slice(0, 100)}, days: ${days}`);
+    }
   }
 }

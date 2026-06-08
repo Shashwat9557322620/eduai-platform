@@ -2,8 +2,9 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '../../components/Navbar';
+import { Suspense } from 'react';
 
-export default function PaymentSuccess() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const credits = searchParams.get('credits') || '0';
 
@@ -27,5 +28,13 @@ export default function PaymentSuccess() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccess() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#020203] flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full" /></div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }
