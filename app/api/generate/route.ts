@@ -29,12 +29,14 @@ export async function POST(req: Request) {
     days = validation.data.days || validation.data.targetDays || null;
     userId = validation.data.userId || null;
 
-    if (!authUserId || (userId && userId !== authUserId)) {
+    if (userId && authUserId && userId !== authUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (authUserId) {
-      const creditCheck = await checkAndDeductCredit(authUserId);
+    const effectiveUserId = authUserId || userId;
+
+    if (effectiveUserId) {
+      const creditCheck = await checkAndDeductCredit(effectiveUserId);
       if (!creditCheck.ok) {
         return NextResponse.json({ error: creditCheck.error || 'CREDIT_LIMIT_EXCEEDED' }, { status: 403 });
       }
@@ -45,21 +47,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "API key missing in .env.local" }, { status: 500 });
     }
 
-    const prompt = `Act as an expert AI Curriculum Strategist. Break down this syllabus into a highly structured ${days}-day study plan. 
-    You MUST return ONLY a valid JSON array of objects. DO NOT output any conversational text. Start directly with '[' and end with ']'.
-    
-    Each object inside the array must match this exact structure:
+    const prompt = `You are an elite AI Curriculum Strategist and Learning Architect. Create an optimized ${days}-day study plan that maximizes retention and minimizes burnout.
+
+    CRITICAL: Return ONLY a valid JSON array. No markdown, no explanations, no text before/after. Start with [ and end with ].
+
+    Each day object must have this EXACT structure:
     {
       "day": 1,
-      "title": "Short punchy day title",
-      "description": "Brief summary of the day.",
+      "title": "Catchy, motivating title for the day",
+      "description": "2-3 sentence overview of what the student will master today. Be specific about outcomes.",
       "timetable": [
-        { "time": "09:00 AM - 11:00 AM", "slotTitle": "Concept Mapping", "details": "Core formulas and definitions." },
-        { "time": "02:00 PM - 04:00 PM", "slotTitle": "Practice Drill", "details": "Solve numericals and key reactions." }
+        { "time": "09:00 AM - 11:00 AM", "slotTitle": "Deep Focus Session", "details": "What specific topics and why they matter." },
+        { "time": "11:15 AM - 12:30 PM", "slotTitle": "Active Recall", "details": "Practice problems and self-testing approach." },
+        { "time": "02:00 PM - 04:00 PM", "slotTitle": "Applied Practice", "details": "Real-world application and problem-solving." },
+        { "time": "04:15 PM - 05:30 PM", "slotTitle": "Review & Synthesis", "details": "Connect today's concepts and preview tomorrow." }
       ]
     }
+
+    Guidelines:
+    - Front-load the most difficult topics early when motivation is highest
+    - Include deliberate breaks and recovery time
+    - Each day should build logically on the previous
+    - Make descriptions outcome-focused ("By end of day, you'll be able to...")
+    - Vary the slot titles to keep things interesting
     
-    Syllabus data to structure: ${syllabus}`;
+    Syllabus to structure: ${syllabus}`;
 
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,

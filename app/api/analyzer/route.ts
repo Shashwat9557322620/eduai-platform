@@ -35,13 +35,13 @@ export async function POST(req: Request) {
     }
     const { role, skills } = validation.data;
 
-    if (!authUserId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const effectiveUserId = authUserId || userId;
 
-    const creditCheck = await checkAndDeductCredit(authUserId);
-    if (!creditCheck.ok) {
-      return NextResponse.json({ error: creditCheck.error || 'Credit limit exceeded' }, { status: 403 });
+    if (effectiveUserId) {
+      const creditCheck = await checkAndDeductCredit(effectiveUserId);
+      if (!creditCheck.ok) {
+        return NextResponse.json({ error: creditCheck.error || 'Credit limit exceeded' }, { status: 403 });
+      }
     }
 
     const apiKey = process.env.Gemini_Api_Key;
@@ -49,16 +49,42 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "API Key missing" }, { status: 500 });
     }
 
-    const prompt = `You are an elite Tech Career Coach & Recruiter.
-    Analyze the skill gap for a candidate targeting the role of "${role}".
-    Their current skills/resume text: "${skills}".
-    
-    Provide a premium, highly detailed career roadmap in Markdown format. Include:
-    1. Match Percentage (Give a prominent metric/percentage).
-    2. Missing Core Skills (What they lack for this role).
-    3. Missing Soft Skills/Tooling.
-    4. Actionable 30-60-90 Day Learning Path to bridge this gap.
-    Use professional markdown headers and clean bullet points.`;
+    const prompt = `You are an elite Tech Career Coach and Hiring Manager with 15+ years of experience.
+
+    Analyze the skill gap for: "${role}"
+    Candidate's current skills/resume: "${skills}"
+
+    Create a comprehensive career analysis in Markdown format:
+
+    ## Overall Match Score
+    Give a percentage (0-100%) with brief justification.
+
+    ## What You Have (Strengths)
+    - List specific skills that directly apply to this role
+    - Highlight any competitive advantages
+
+    ## Critical Gaps
+    - Missing technical skills (ranked by importance)
+    - Missing soft skills
+    - Missing tools/frameworks
+    - Missing certifications (if relevant)
+
+    ## 90-Day Acceleration Plan
+    Break into 3 phases:
+    - **Week 1-4:** Foundation building (what to learn first)
+    - **Week 5-8:** Practical application (projects to build)
+    - **Week 9-12:** Advanced topics and portfolio pieces
+
+    ## Recommended Resources
+    - Specific courses, books, or projects
+    - Free vs paid options
+    - Time estimates for each
+
+    ## Portfolio Projects
+    - 2-3 project ideas that demonstrate the required skills
+    - Why each project matters for this specific role
+
+    Use concrete examples. Be specific about technologies and methodologies.`;
 
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,

@@ -1,0 +1,155 @@
+{
+  "name": "EduAI | AI Study Arsenal",
+  "short_name": "EduAI",
+  "description": "Next-gen AI tools for students — Curriculum Optimizer, Neural Flashcards, and Skill Gap Analyzer powered by advanced AI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020203",
+  "theme_color": "#020203",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "productivity", "utilities"],
+  "iarc_rating_id": "",
+  "prefer_related_applications": false,
+
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "EduAI Dashboard - AI Study Arsenal"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "EduAI Mobile - Study Anywhere"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Curriculum Optimizer",
+      "short_name": "Optimizer",
+      "description": "Generate AI study plans from syllabus",
+      "url": "/optimizer",
+      "icons": [
+        {
+          "src": "/icons/shortcut-optimizer.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Neural Flashcards",
+      "short_name": "Flashcards",
+      "description": "Create interactive flashcards from text",
+      "url": "/flashcards",
+      "icons": [
+        {
+          "src": "/icons/shortcut-flashcards.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Skill Gap Analyzer",
+      "short_name": "Analyzer",
+      "description": "Analyze skills against job requirements",
+      "url": "/analyzer",
+      "icons": [
+        {
+          "src": "/icons/shortcut-analyzer.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your study progress and streaks",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icons/shortcut-dashboard.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "file",
+          "accept": ["text/plain", "text/markdown", "application/pdf", "image/*"]
+        }
+      ],
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+eduai",
+      "url": "/?action=%s"
+    }
+  ],
+
+  "related_applications": [],
+  
+  "handle_links": "preferred",
+
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+
+  "background_sync": {
+    "enabled": true
+  },
+
+  "notifications": {
+    "permissions": ["background-sync", "periodic-background-sync"]
+  }
+}

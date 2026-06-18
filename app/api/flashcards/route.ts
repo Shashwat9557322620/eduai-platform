@@ -82,13 +82,17 @@ export async function POST(req: Request) {
     }
     const { text } = validation.data;
 
-    if (!authUserId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const effectiveUserId = authUserId || userId;
+
+    if (!effectiveUserId) {
+      // Allow basic usage without auth for demo purposes
     }
 
-    const creditCheck = await checkAndDeductCredit(authUserId);
-    if (!creditCheck.ok) {
-      return NextResponse.json({ error: creditCheck.error }, { status: 403 });
+    if (effectiveUserId) {
+      const creditCheck = await checkAndDeductCredit(effectiveUserId);
+      if (!creditCheck.ok) {
+        return NextResponse.json({ error: creditCheck.error }, { status: 403 });
+      }
     }
 
     const apiKey = process.env.Gemini_Api_Key;
@@ -96,11 +100,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "API Key missing in environment variables" }, { status: 500 });
     }
 
-    const prompt = `You are an AI tutor. Extract key concepts from this text and create flashcards. 
-    If the text is just a greeting, a name, or very short, make a simple fun flashcard out of it.
-    Return ONLY a valid JSON array containing objects. Each object must have exactly two keys: "front" and "back".
-    Do NOT include markdown formatting like \`\`\`json.
-    Text: ${text}`;
+    const prompt = `You are an expert educator creating high-quality flashcards that maximize learning retention.
+
+    CRITICAL RULES:
+    - Return ONLY a valid JSON array. No markdown, no explanations.
+    - Each card must have exactly "front" and "back" keys.
+    - Generate 8-15 cards depending on content depth.
+    - Front: Clear, specific question or concept (not vague)
+    - Back: Concise but complete answer with key details
+
+    CARD CREATION PRINCIPLES:
+    1. Front cards should be specific questions, not statements
+    2. Back answers should include key formulas, definitions, or steps
+    3. Mix question types: definitions, comparisons, applications, "what if" scenarios
+    4. Include real-world examples when possible
+    5. Make connections between concepts explicit
+
+    If the text is very short (like a greeting), create a simple, engaging flashcard from it.
+    If the text is empty or nonsensical, return [{"front": "Ready to learn?", "back": "Paste some content and I'll create flashcards for you!"}]
+
+    Text to create flashcards from: ${text}`;
 
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,

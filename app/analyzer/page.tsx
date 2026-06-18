@@ -1,10 +1,9 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Navbar from '../components/Navbar';
 import ReactMarkdown from 'react-markdown';
-import UnifiedBackground from '../components/UnifiedBackground';
-import GlitchText from '../components/GlitchText';
+import SkillAnalyzerBackground from '../components/backgrounds/SkillAnalyzerBackground';
 import ShareButton from '../components/ShareButton';
 import CopyFullContent from '../components/CopyFullContent';
 import RatingWidget from '../components/RatingWidget';
@@ -17,6 +16,40 @@ export default function SkillGapAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [typingText, setTypingText] = useState('');
+  const [activeTab, setActiveTab] = useState<'input' | 'results'>('input');
+
+  // Typing animation for loading state
+  useEffect(() => {
+    if (!loading) return;
+    const messages = [
+      "Connecting to neural diagnostics...",
+      "Cross-referencing skill matrices...",
+      "Analyzing market demand data...",
+      "Generating skill gap report...",
+      "Finalizing analysis..."
+    ];
+    let msgIndex = 0;
+    let charIndex = 0;
+    let currentText = '';
+    
+    const typeInterval = setInterval(() => {
+      if (msgIndex >= messages.length) msgIndex = 0;
+      const currentMsg = messages[msgIndex];
+      if (charIndex < currentMsg.length) {
+        currentText += currentMsg[charIndex];
+        setTypingText(currentText);
+        charIndex++;
+      } else {
+        charIndex = 0;
+        msgIndex++;
+        currentText = '';
+        setTypingText('');
+      }
+    }, 30);
+
+    return () => clearInterval(typeInterval);
+  }, [loading]);
 
   const handleAnalyze = async () => {
     setError(null);
@@ -27,6 +60,7 @@ export default function SkillGapAnalyzer() {
 
     setLoading(true);
     setAnalysis("");
+    setActiveTab('results');
 
     try {
       const response = await fetch('/api/analyzer', {
@@ -43,6 +77,7 @@ export default function SkillGapAnalyzer() {
       setError(err instanceof Error ? err.message : "Matrix Overload");
     } finally {
       setLoading(false);
+      setTypingText('');
     }
   };
 
@@ -53,27 +88,27 @@ export default function SkillGapAnalyzer() {
       {/* Cyber Grid Background */}
       <div className="fixed inset-0 pointer-events-none -z-20 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]"></div>
       
-      <UnifiedBackground />
+      <SkillAnalyzerBackground />
 
       <Navbar />
 
       <div className="pt-36 px-6 max-w-7xl mx-auto relative z-10">
         
-        {/* Header - Advanced Tech Vibe */}
+        {/* Header */}
         <div className="text-center mb-16 flex flex-col items-center">
-          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-bold tracking-widest mb-6 animate-shimmer-overlay shadow-[0_0_20px_rgba(217,70,239,0.1)]">
-            <span className="relative flex h-3 w-3">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 backdrop-blur-sm mb-6">
+            <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-fuchsia-500 shadow-[0_0_10px_#d946ef]"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-fuchsia-500"></span>
             </span>
-            <span className="text-gray-300 uppercase">Neural Diagnostics Active</span>
+            <span className="text-xs font-semibold text-fuchsia-300 tracking-wider uppercase">AI-Powered Career Analysis</span>
           </div>
           
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 uppercase drop-shadow-2xl">
-            <GlitchText text="Skill Gap" tag="span" autoGlitch autoGlitchInterval={7000} />
+            Skill Gap
             <br className="md:hidden" />
             <span className="text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 via-fuchsia-400 to-pink-500">
-              <GlitchText text="Analyzer." tag="span" autoGlitch autoGlitchInterval={5000} />
+              Analyzer.
             </span>
           </h1>
           <p className="text-gray-400 max-w-2xl text-lg font-medium">Deconstruct your target career path. Identify missing core capabilities, tech stacks, and generate a hyper-targeted roadmap.</p>
@@ -86,8 +121,6 @@ export default function SkillGapAnalyzer() {
           </div>
         )}
 
-
-
         {/* Input Interface */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-16">
           
@@ -95,7 +128,7 @@ export default function SkillGapAnalyzer() {
           <div className="lg:col-span-2 relative group h-full">
             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/30 via-fuchsia-500/30 to-indigo-500/30 rounded-[2rem] opacity-40 group-hover:opacity-70 transition duration-700 animate-gradient-x"></div>
             
-            <div className="h-full bg-[#07070a] rounded-[1.8rem] p-8 border border-white/10 relative shadow-2xl flex flex-col space-y-8">
+            <div className="h-full bg-[#07070a] rounded-[2rem] p-8 border border-white/10 relative shadow-2xl flex flex-col space-y-8">
               
               {/* Fake Terminal Header */}
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
@@ -104,7 +137,7 @@ export default function SkillGapAnalyzer() {
                   <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                   <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                 </div>
-                <span className="text-xs font-mono text-fuchsia-400/70 tracking-widest">sys.input_module</span>
+                <span className="text-xs font-mono text-fuchsia-400/70 tracking-widest">skill_analyzer.py</span>
               </div>
 
               <div className="flex-1 space-y-8">
@@ -137,7 +170,7 @@ export default function SkillGapAnalyzer() {
           </div>
 
           {/* Action Trigger Box */}
-          <div className="bg-[#07070a] border border-white/10 rounded-[1.8rem] p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+          <div className="bg-[#07070a] border border-white/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
             {/* Corner Decor */}
             <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 animate-pulse-soft rounded-full"></div>
             <div className="absolute top-4 right-4 text-white/5">
@@ -161,13 +194,15 @@ export default function SkillGapAnalyzer() {
                   ${loading ? 'bg-[#111] text-indigo-400 border border-indigo-500/30' : 'bg-white text-black hover:scale-[1.02] shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_50px_rgba(217,70,239,0.4)]'}`}
               >
                 {!loading && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />}
-                {/* Laser Scanning Animation when loading */}
                 {loading && <div className="absolute inset-0 w-full h-1 bg-gradient-to-r from-transparent via-fuchsia-400 to-transparent opacity-80 animate-scan"></div>}
                 
                 {loading ? (
-                  <span className="flex items-center justify-center gap-3 relative z-10 font-mono tracking-wider">
-                    <span className="w-3 h-3 bg-fuchsia-500 rounded-full animate-ping"></span>
-                    ANALYZING...
+                  <span className="flex items-center justify-center gap-3 relative z-10 font-mono tracking-wider text-sm">
+                    <div className="relative">
+                      <div className="w-5 h-5 border-2 border-indigo-500/30 border-t-indigo-400 rounded-full animate-spin"></div>
+                    </div>
+                    <span>{typingText || 'Analyzing...'}</span>
+                    <span className="animate-pulse">|</span>
                   </span>
                 ) : (
                   <span className="relative z-10 flex items-center justify-center gap-3">
@@ -180,9 +215,9 @@ export default function SkillGapAnalyzer() {
           </div>
         </div>
 
-        {/* Premium Extreme Output Section */}
+        {/* Output Section */}
         {analysis && (
-          <div className="relative mt-16 group">
+          <div className="relative mt-16 group animate-fade-in-up">
             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600/40 via-fuchsia-500/40 to-indigo-600/40 rounded-3xl opacity-60 group-hover:opacity-90 transition duration-700 animate-gradient-x"></div>
             
             <div className="bg-[#050508] border border-fuchsia-500/30 rounded-3xl p-8 md:p-14 shadow-2xl relative">
@@ -192,13 +227,20 @@ export default function SkillGapAnalyzer() {
                 <div className="flex items-center gap-5">
                   <div className="relative p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/40 shadow-[0_0_30px_rgba(99,102,241,0.3)]">
                     <svg className="w-8 h-8 text-indigo-400 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
-                    {/* Radar Ping */}
                     <div className="absolute inset-0 border-2 border-indigo-400 rounded-2xl animate-ping opacity-20"></div>
                   </div>
                   <div>
                     <h2 className="text-3xl font-black text-white tracking-tight uppercase">Skill Matrix Breakdown</h2>
                     <p className="text-fuchsia-400 font-mono text-sm mt-1">Status: Decoded & Verified</p>
                   </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <CopyFullContent text={analysis} />
+                  <ShareButton 
+                    title={`Skill Gap Analysis for ${role}`}
+                    text={analysis}
+                  />
                 </div>
               </div>
               
@@ -224,20 +266,12 @@ export default function SkillGapAnalyzer() {
                 </ReactMarkdown>
               </div>
             </div>
-n
-            {/* Share, Copy & Rating */}
-            <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-                <CopyFullContent text={analysis} />
-                <ShareButton 
-                  title={`Skill Gap Analysis for ${role}`}
-                  text={analysis}
-                />
-              </div>
+
+            {/* Rating Widget */}
+            <div className="mt-8 flex justify-center">
               <RatingWidget />
             </div>
           </div>
-
         )}
 
       </div>

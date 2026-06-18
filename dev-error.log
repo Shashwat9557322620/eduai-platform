@@ -1,0 +1,947 @@
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] ⨯ unhandledRejection: Error: 
+Clerk: The <SignUp/> component is not configured correctly. The most likely reasons for this error are:
+
+1. The "/sign-up" route is not a catch-all route.
+It is recommended to convert this route to a catch-all route, eg: "/sign-up/[[...rest]]/page.tsx". Alternatively, you can update the <SignUp/> component to use hash-based routing by setting the "routing" prop to "hash".
+
+2. The <SignUp/> component is mounted in a catch-all route, but all routes under "/sign-up" are protected by the middleware.
+To resolve this, ensure that the middleware does not protect the catch-all route or any of its children. If you are using the "createRouteMatcher" helper, consider adding "(.*)" to the end of the route pattern, eg: "/sign-up(.*)". For more information, see: https://clerk.com/docs/reference/nextjs/clerk-middleware#create-route-matcher
+
+[browser] [Monitor] Error: 
+Clerk: The <SignUp/> component is not configured correctly. The most likely reasons for this error are:
+
+1. The "/sign-up" route is not a catch-all route.
+It is recommended to convert this route to a catch-all route, eg: "/sign-up/[[...rest]]/page.tsx". Alternatively, you can update the <SignUp/> component to use hash-based routing by setting the "routing" prop to "hash".
+
+2. The <SignUp/> component is mounted in a catch-all route, but all routes under "/sign-up" are protected by the middleware.
+To resolve this, ensure that the middleware does not protect the catch-all route or any of its children. If you are using the "createRouteMatcher" helper, consider adding "(.*)" to the end of the route pattern, eg: "/sign-up(.*)". For more information, see: https://clerk.com/docs/reference/nextjs/clerk-middleware#create-route-matcher
+ Error: 
+Clerk: The <SignUp/> component is not configured correctly. The most likely reasons for this error are:
+
+1. The "/sign-up" route is not a catch-all route.
+It is recommended to convert this route to a catch-all route, eg: "/sign-up/[[...rest]]/page.tsx". Alternatively, you can update the <SignUp/> component to use hash-based routing by setting the "routing" prop to "hash".
+
+2. The <SignUp/> component is mounted in a catch-all route, but all routes under "/sign-up" are protected by the middleware.
+To resolve this, ensure that the middleware does not protect the catch-all route or any of its children. If you are using the "createRouteMatcher" helper, consider adding "(.*)" to the end of the route pattern, eg: "/sign-up(.*)". For more information, see: https://clerk.com/docs/reference/nextjs/clerk-middleware#create-route-matcher
+
+    at error (webpack-internal:///(app-pages-browser)/./node_modules/@clerk/nextjs/dist/esm/client-boundary/hooks/useEnforceCatchAllRoute.js:32:13)
+    at check (webpack-internal:///(app-pages-browser)/./node_modules/@clerk/nextjs/dist/esm/client-boundary/hooks/useEnforceCatchAllRoute.js:61:11) 
+    at reportError (lib\monitoring.ts:152:13)
+    at eval (lib\monitoring.ts:192:5)
+  150 |   errorBuffer.push(error);
+  151 |   if (process.env.NODE_ENV === 'development') {
+> 152 |     console.error('[Monitor] Error:', error.message, error.stack);
+      |             ^
+  153 |   }
+  154 |   // Flush to server periodically
+  155 |   if (errorBuffer.length >= 5) flushErrors(); (lib\monitoring.ts:152:13)
+[ClientError] 
+Clerk: The <SignUp/> component is not configured correctly. The most likely reasons for this error are:
+
+1. The "/sign-up" route is not a catch-all route.
+It is recommended to convert this route to a catch-all route, eg: "/sign-up/[[...rest]]/page.tsx". Alternatively, you can update the <SignUp/> component to use hash-based routing by setting the "routing" prop to "hash".
+
+2. The <SignUp/> component is mounted in a catch-all route, but all routes under "/sign-up" are protected by the middleware.
+To resolve this, ensure that the middleware does not protect the catch-all route or any of its children. If you are using the "createRouteMatcher" helper, consider adding "(.*)" to the end of the route pattern, eg: "/sign-up(.*)". For more information, see: https://clerk.com/docs/reference/nextjs/clerk-middleware#create-route-matcher
+ http://localhost:3000/sign-up undefined undefined
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Each child in a list should have a unique "key" prop.
+
+Check the render method of `AdminDashboard`. See https://react.dev/link/warning-keys for more information. 
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+        <SegmentViewNode type="page" pagePath="page.tsx">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function Home} serverProvidedParams={{...}}>
+            <Home params={Promise} searchParams={Promise}>
+              <div className="min-h-scre...">
+                <LoadableComponent>
+                <LoadableComponent>
+                <Navbar>
+                  <nav aria-label="Main navig..." className="w-full fix...">
+                    <div className="max-w-7xl ...">
+                      <LinkComponent>
+                      <div className="hidden md:...">
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent href="/podcast" aria-current={undefined} className="relative p..." style={{}}>
++                         <a
++                           aria-current={undefined}
++                           className="relative px-4 py-2 text-sm font-bold rounded-full transition-all duration-300 t..."
++                           style={{}}
++                           ref={function}
++                           onClick={function onClick}
++                           onMouseEnter={function onMouseEnter}
++                           onTouchStart={function onTouchStart}
++                           href="/podcast"
++                         >
+-                         <div className="w-px h-5 bg-white/[0.08] mx-1">
+                        ...
+                        ...
+                      ...
+                ...
+              ...
+        ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at a (<anonymous>)
+    at eval (app\components\Navbar.tsx:50:15)
+    at Array.map (<anonymous>)
+    at Navbar (app\components\Navbar.tsx:47:13)
+    at Home (app\page.tsx:99:9)
+  48 |             const isActive = pathname?.startsWith(link.href);
+  49 |             return (
+> 50 |               <Link 
+     |               ^
+  51 |                 key={link.href}
+  52 |                 href={link.href} 
+  53 |                 aria-current={isActive ? 'page' : undefined}
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>
+      <ErrorBoundary errorComponent={function GlobalError} errorStyles={<SegmentViewNode>} errorScripts={[...]}>
+        <ErrorBoundaryHandler pathname="/" errorComponent={function GlobalError} errorStyles={<SegmentViewNode>} ...>
+          <LoadingBoundary name="/" loading={null}>
+            <HTTPAccessFallbackBoundary notFound={<SegmentViewNode>} forbidden={undefined} unauthorized={undefined}>
+              <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<SegmentViewNode>} forbidden={undefined} ...>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+                      <SegmentViewNode type="page" pagePath="page.tsx">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function Home} serverProvidedParams={{...}}>
+                          <Home params={Promise} searchParams={Promise}>
+                            <div className="min-h-scre...">
+                              <LoadableComponent>
+                              <LoadableComponent>
+                              <Navbar>
+                              <LoadableComponent>
+                              <div
++                               className="fixed inset-0 pointer-events-none z-0"
+-                               className="pt-32 pb-24 px-6 max-w-7xl mx-auto text-center relative z-10 flex flex-col ..."
+                              >
++                               <div
++                                 className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple..."
++                                 style={{left:"17.3052074...",top:"24.0246761...",animation:"float 7.68...",animationDelay:"4.0428..."}}
++                               >
+-                               {"          "}
+                                ...
+                              ...
+                            ...
+                      ...
+                    ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at eval (app\page.tsx:118:13)
+    at Array.map (<anonymous>)
+    at Home (app\page.tsx:117:27)
+  116 |         <div className="fixed inset-0 pointer-events-none z-0">
+  117 |           {[...Array(20)].map((_, i) => (
+> 118 |             <div
+      |             ^
+  119 |               key={i}
+  120 |               className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 ...
+  121 |               style={{
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+⨯ ./app/globals.css:567:5
+Syntax error: C:\edtech-platform\app\globals.css Unknown word
+
+ [90m 565 | [39m    background[33m:[39m [36mradial-gradient[39m[36m([39mcircle, [36mrgba[39m[36m(34,211,238,0.1)[39m, transparent 70%[36m)[39m[33m;[39m
+ [90m 566 | [39m    transform[33m:[39m [36mtranslate[39m[36m(-50%, -50%)[39m[33m;[39m
+[1m[31m>[39m[22m[90m 567 | [39m    mix-blend-screen[33m;[39m
+ [90m     | [39m    [1m[31m^[39m[22m
+ [90m 568 | [39m  [33m}[39m
+ [90m 569 | [39m
+[browser] ./app/globals.css:567:5
+Syntax error: C:\edtech-platform\app\globals.css Unknown word
+
+  565 |     background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 70%);
+  566 |     transform: translate(-50%, -50%);
+> 567 |     mix-blend-screen;
+      |     ^
+  568 |   }
+  569 |  
+[browser] ./app/globals.css
+Syntax error: C:\edtech-platform\app\globals.css Unknown word (567:5)
+
+  565 |     background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 70%);
+  566 |     transform: translate(-50%, -50%);
+> 567 |     mix-blend-screen;
+      |     ^
+  568 |   }
+  569 | 
+-- inner error --
+Syntax error: C:\edtech-platform\app\globals.css Unknown word (567:5)
+
+  565 |     background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 70%);
+  566 |     transform: translate(-50%, -50%);
+> 567 |     mix-blend-screen;
+      |     ^
+  568 |   }
+  569 | 
+Generated code for C:\edtech-platform\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[15].oneOf[10].use[2]!C:\edtech-platform\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[15].oneOf[10].use[3]!C:\edtech-platform\app\globals.css
+1 | throw new Error("Module build failed (from ./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js):\nSyntaxError\n\n(567:5) C:\\edtech-platform\\app\\globals.css Unknown word\n\n \u001b[90m 565 | \u001b[39m    background\u001b[33m:\u001b[39m \u001b[36mradial-gradient\u001b[39m\u001b[36m(\u001b[39mcircle, \u001b[36mrgba\u001b[39m\u001b[36m(34,211,238,0.1)\u001b[39m, transparent 70%\u001b[36m)\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 566 | \u001b[39m    transform\u001b[33m:\u001b[39m \u001b[36mtranslate\u001b[39m\u001b[36m(-50%, -50%)\u001b[39m\u001b[33m;\u001b[39m\n\u001b[1m\u001b[31m>\u001b[39m\u001b[22m\u001b[90m 567 | \u001b[39m    mix-blend-screen\u001b[33m;\u001b[39m\n \u001b[90m     | \u001b[39m    \u001b[1m\u001b[31m^\u001b[39m\u001b[22m\n \u001b[90m 568 | \u001b[39m  \u001b[33m}\u001b[39m\n \u001b[90m 569 | \u001b[39m\n");
+
+Import trace for requested module:
+./app/globals.css 
+[browser] ./app/globals.css:567:5
+Syntax error: C:\edtech-platform\app\globals.css Unknown word
+
+  565 |     background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 70%);
+  566 |     transform: translate(-50%, -50%);
+> 567 |     mix-blend-screen;
+      |     ^
+  568 |   }
+  569 |  
+[browser] ./app/globals.css
+Syntax error: C:\edtech-platform\app\globals.css Unknown word (567:5)
+
+  565 |     background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 70%);
+  566 |     transform: translate(-50%, -50%);
+> 567 |     mix-blend-screen;
+      |     ^
+  568 |   }
+  569 | 
+-- inner error --
+Syntax error: C:\edtech-platform\app\globals.css Unknown word (567:5)
+
+  565 |     background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 70%);
+  566 |     transform: translate(-50%, -50%);
+> 567 |     mix-blend-screen;
+      |     ^
+  568 |   }
+  569 | 
+Generated code for C:\edtech-platform\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[15].oneOf[10].use[2]!C:\edtech-platform\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[15].oneOf[10].use[3]!C:\edtech-platform\app\globals.css
+1 | throw new Error("Module build failed (from ./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js):\nSyntaxError\n\n(567:5) C:\\edtech-platform\\app\\globals.css Unknown word\n\n \u001b[90m 565 | \u001b[39m    background\u001b[33m:\u001b[39m \u001b[36mradial-gradient\u001b[39m\u001b[36m(\u001b[39mcircle, \u001b[36mrgba\u001b[39m\u001b[36m(34,211,238,0.1)\u001b[39m, transparent 70%\u001b[36m)\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 566 | \u001b[39m    transform\u001b[33m:\u001b[39m \u001b[36mtranslate\u001b[39m\u001b[36m(-50%, -50%)\u001b[39m\u001b[33m;\u001b[39m\n\u001b[1m\u001b[31m>\u001b[39m\u001b[22m\u001b[90m 567 | \u001b[39m    mix-blend-screen\u001b[33m;\u001b[39m\n \u001b[90m     | \u001b[39m    \u001b[1m\u001b[31m^\u001b[39m\u001b[22m\n \u001b[90m 568 | \u001b[39m  \u001b[33m}\u001b[39m\n \u001b[90m 569 | \u001b[39m\n");
+
+Import trace for requested module:
+./app/globals.css 
+⨯ ./app/globals.css:567:5
+Syntax error: C:\edtech-platform\app\globals.css Unknown word
+
+ [90m 565 | [39m    background[33m:[39m [36mradial-gradient[39m[36m([39mcircle, [36mrgba[39m[36m(34,211,238,0.1)[39m, transparent 70%[36m)[39m[33m;[39m
+ [90m 566 | [39m    transform[33m:[39m [36mtranslate[39m[36m(-50%, -50%)[39m[33m;[39m
+[1m[31m>[39m[22m[90m 567 | [39m    mix-blend-screen[33m;[39m
+ [90m     | [39m    [1m[31m^[39m[22m
+ [90m 568 | [39m  [33m}[39m
+ [90m 569 | [39m
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\edtech-platform\.next\dev\cache\webpack\client-development-fallback\0.pack.gz_' -> 'C:\edtech-platform\.next\dev\cache\webpack\client-development-fallback\0.pack.gz'
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <ErrorBoundary errorComponent={function GlobalError} errorStyles={<SegmentViewNode>} errorScripts={[...]}>
+      <ErrorBoundaryHandler pathname="/" errorComponent={function GlobalError} errorStyles={<SegmentViewNode>} ...>
+        <LoadingBoundary name="/" loading={null}>
+          <HTTPAccessFallbackBoundary notFound={<SegmentViewNode>} forbidden={undefined} unauthorized={undefined}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<SegmentViewNode>} forbidden={undefined} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+                    <SegmentViewNode type="page" pagePath="page.tsx">
+                      <SegmentTrieNode>
+                      <ClientPageRoot Component={function Home} serverProvidedParams={{...}}>
+                        <Home params={Promise} searchParams={Promise}>
+                          <div className="min-h-scre...">
+                            <LoadableComponent>
+                            <LoadableComponent>
+                            <Navbar>
+                            <LoadableComponent>
+                            <div className="fixed inse...">
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "66.42298914177763%"
+-                                 left: "66.8987%"
++                                 top: "9.686318432972374%"
+-                                 top: "17.8359%"
++                                 animation: "float 6.724554419762317s ease-in-out infinite"
++                                 animationDelay: "2.402679690991395s"
+-                                 animation-duration: "9.39873s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "2.45868s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "17.405439915030207%"
+-                                 left: "40.6534%"
++                                 top: "19.478744212198652%"
+-                                 top: "20.9701%"
++                                 animation: "float 8.258271011009212s ease-in-out infinite"
++                                 animationDelay: "1.6980022395187682s"
+-                                 animation-duration: "9.56704s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "4.80497s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "47.7495147052142%"
+-                                 left: "3.50121%"
++                                 top: "59.73137047177628%"
+-                                 top: "4.57706%"
++                                 animation: "float 7.224386364337864s ease-in-out infinite"
++                                 animationDelay: "0.266255011236069s"
+-                                 animation-duration: "6.19843s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "1.74553s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "92.69340997672487%"
+-                                 left: "96.8657%"
++                                 top: "33.290881736344716%"
+-                                 top: "93.1828%"
++                                 animation: "float 7.361886431935204s ease-in-out infinite"
++                                 animationDelay: "0.28774499241900564s"
+-                                 animation-duration: "8.90862s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "0.966549s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "94.37431963287916%"
+-                                 left: "25.8959%"
++                                 top: "44.435411176466154%"
+-                                 top: "98.9033%"
++                                 animation: "float 7.797002764697547s ease-in-out infinite"
++                                 animationDelay: "2.4529448237952516s"
+-                                 animation-duration: "7.42718s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "1.49003s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "53.946405628295956%"
+-                                 left: "57.976%"
++                                 top: "14.531584442078604%"
+-                                 top: "16.6596%"
++                                 animation: "float 9.258919828406741s ease-in-out infinite"
++                                 animationDelay: "3.3800566876050664s"
+-                                 animation-duration: "6.42439s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "0.694275s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "50.484679790651754%"
+-                                 left: "31.8891%"
++                                 top: "12.844880893600696%"
+-                                 top: "56.7583%"
++                                 animation: "float 7.387759105852464s ease-in-out infinite"
++                                 animationDelay: "1.4975445979560142s"
+-                                 animation-duration: "8.45169s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "1.91837s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "36.68908385130252%"
+-                                 left: "94.9177%"
++                                 top: "53.38508246468127%"
+-                                 top: "73.454%"
++                                 animation: "float 7.431072621785219s ease-in-out infinite"
++                                 animationDelay: "0.7469976587240845s"
+-                                 animation-duration: "8.58907s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "1.52628s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "9.110519795120265%"
+-                                 left: "36.4775%"
++                                 top: "84.87281092408742%"
+-                                 top: "5.12114%"
++                                 animation: "float 8.737180678703105s ease-in-out infinite"
++                                 animationDelay: "0.736976303052379s"
+-                                 animation-duration: "8.89768s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "0.810447s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "74.89608865772865%"
+-                                 left: "32.2221%"
++                                 top: "99.90738154099596%"
+-                                 top: "19.579%"
++                                 animation: "float 7.369988396459199s ease-in-out infinite"
++                                 animationDelay: "1.0103546746894687s"
+-                                 animation-duration: "8.46832s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "0.230951s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "73.32401294381243%"
+-                                 left: "67.5554%"
++                                 top: "45.72856357668685%"
+-                                 top: "90.915%"
++                                 animation: "float 6.222639940423036s ease-in-out infinite"
++                                 animationDelay: "3.7420867886096545s"
+-                                 animation-duration: "9.09238s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "3.80048s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "66.43376351954916%"
+-                                 left: "45.1355%"
++                                 top: "56.00278840196461%"
+-                                 top: "7.83069%"
++                                 animation: "float 9.377922503072176s ease-in-out infinite"
++                                 animationDelay: "4.311155445380602s"
+-                                 animation-duration: "6.19924s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "3.62574s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "40.40482484912011%"
+-                                 left: "94.3971%"
++                                 top: "48.595773558726144%"
+-                                 top: "21.6812%"
++                                 animation: "float 8.484098654322402s ease-in-out infinite"
++                                 animationDelay: "0.8520078495667377s"
+-                                 animation-duration: "6.45376s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "0.393027s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "87.55815422517816%"
+-                                 left: "77.8598%"
++                                 top: "77.35209378821507%"
+-                                 top: "35.4979%"
++                                 animation: "float 9.252761859084128s ease-in-out infinite"
++                                 animationDelay: "3.4529583743744965s"
+-                                 animation-duration: "9.11725s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "4.9598s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "82.4876657486699%"
+-                                 left: "87.7976%"
++                                 top: "71.91960689393994%"
+-                                 top: "82.5344%"
++                                 animation: "float 6.708016053584711s ease-in-out infinite"
++                                 animationDelay: "0.4775228438613688s"
+-                                 animation-duration: "9.55489s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "2.7591s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "48.78645083987908%"
+-                                 left: "47.4751%"
++                                 top: "25.944413339509666%"
+-                                 top: "9.90955%"
++                                 animation: "float 9.50553362621369s ease-in-out infinite"
++                                 animationDelay: "2.040896840745285s"
+-                                 animation-duration: "6.4995s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "0.313543s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "81.07195084835114%"
+-                                 left: "50.5531%"
++                                 top: "40.629231878440564%"
+-                                 top: "9.1004%"
++                                 animation: "float 7.018647982224859s ease-in-out infinite"
++                                 animationDelay: "1.0343221662800883s"
+-                                 animation-duration: "6.77857s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "4.24589s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "95.14275789501728%"
+-                                 left: "21.3755%"
++                                 top: "0.5804150280143694%"
+-                                 top: "20.8146%"
++                                 animation: "float 6.004808922501718s ease-in-out infinite"
++                                 animationDelay: "0.06488381768664897s"
+-                                 animation-duration: "9.18721s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "2.53487s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "27.209266989361648%"
+-                                 left: "94.7559%"
++                                 top: "61.38395267490997%"
+-                                 top: "63.8261%"
++                                 animation: "float 6.256661037561688s ease-in-out infinite"
++                                 animationDelay: "1.4373590268899517s"
+-                                 animation-duration: "9.92382s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "3.1351s"
+                                }}
+                              >
+                              <div
+                                className="absolute w-1 h-1 rounded-full bg-gradient-to-r from-cyan-400/30 to-purple-4..."
+                                style={{
++                                 left: "22.597503688522437%"
+-                                 left: "45.5312%"
++                                 top: "36.38706914045405%"
+-                                 top: "80.3491%"
++                                 animation: "float 9.149836852723489s ease-in-out infinite"
++                                 animationDelay: "4.820801268461403s"
+-                                 animation-duration: "7.3958s"
+-                                 animation-timing-function: "ease-in-out"
+-                                 animation-iteration-count: "infinite"
+-                                 animation-direction: "normal"
+-                                 animation-fill-mode: "none"
+-                                 animation-play-state: "running"
+-                                 animation-name: "float"
+-                                 animation-timeline: "auto"
+-                                 animation-range-start: "normal"
+-                                 animation-range-end: "normal"
+-                                 animation-delay: "1.54147s"
+                                }}
+                              >
+                            ...
+                          ...
+                    ...
+                  ...
+ 
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+Gemini API error: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\nPlease retry in 56.084241618s.",
+    "status": "RESOURCE_EXHAUSTED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.Help",
+        "links": [
+          {
+            "description": "Learn more about Gemini API quotas",
+            "url": "https://ai.google.dev/gemini-api/docs/rate-limits"
+          }
+        ]
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.QuotaFailure",
+        "violations": [
+          {
+            "quotaMetric": "generativelanguage.googleapis.com/generate_content_free_tier_requests",
+            "quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier",
+            "quotaDimensions": {
+              "location": "global",
+              "model": "gemini-2.0-flash"
+            }
+          },
+          {
+            "quotaMetric": "generativelanguage.googleapis.com/generate_content_free_tier_requests",
+            "quotaId": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier",
+            "quotaDimensions": {
+              "location": "global",
+              "model": "gemini-2.0-flash"
+            }
+          },
+          {
+            "quotaMetric": "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count",
+            "quotaId": "GenerateContentInputTokensPerModelPerMinute-FreeTier",
+            "quotaDimensions": {
+              "location": "global",
+              "model": "gemini-2.0-flash"
+            }
+          }
+        ]
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.RetryInfo",
+        "retryDelay": "56s"
+      }
+    ]
+  }
+}
+
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+        <SegmentViewNode type="page" pagePath="page.tsx">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function Home} serverProvidedParams={{...}}>
+            <Home params={Promise} searchParams={Promise}>
+              <div className="min-h-scre...">
+                <LoadableComponent>
+                <LoadableComponent>
+                <Navbar>
+                  <nav aria-label="Main navig..." className="w-full fix...">
+                    <div className="max-w-7xl ...">
+                      <LinkComponent>
+                      <div suppressHydrationWarning={true} className="hidden md:...">
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent href="/blog" suppressHydrationWarning={true} aria-current={undefined} ...>
++                         <a
++                           suppressHydrationWarning={true}
++                           aria-current={undefined}
++                           className="relative px-4 py-2 text-sm font-bold rounded-full transition-all duration-300 t..."
++                           style={undefined}
++                           ref={function}
++                           onClick={function onClick}
++                           onMouseEnter={function onMouseEnter}
++                           onTouchStart={function onTouchStart}
++                           href="/blog"
++                         >
+-                         <div className="w-px h-5 bg-white/[0.08] mx-1">
+                        ...
+                      ...
+                ...
+              ...
+        ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at a (<anonymous>)
+    at eval (app\components\Navbar.tsx:52:15)
+    at Array.map (<anonymous>)
+    at Navbar (app\components\Navbar.tsx:48:13)
+    at Home (app\page.tsx:158:9)
+  50 |             const activeColor = link.color === 'cyan' ? '#22d3ee' : link.color === 'purple...
+  51 |             return (
+> 52 |               <Link 
+     |               ^
+  53 |                 key={link.href}
+  54 |                 href={link.href} 
+  55 |                 suppressHydrationWarning
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/privacy-p..." tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+        <SegmentViewNode type="page" pagePath="privacy-po...">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function PrivacyPolicy} serverProvidedParams={{...}}>
+            <PrivacyPolicy params={Promise} searchParams={Promise}>
+              <div className="min-h-scre...">
+                <AmbientBackground>
+                <Navbar>
+                  <nav aria-label="Main navig..." className="w-full fix...">
+                    <div className="max-w-7xl ...">
+                      <LinkComponent>
+                      <div suppressHydrationWarning={true} className="hidden md:...">
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent>
+                        <LinkComponent href="/blog" suppressHydrationWarning={true} aria-current={undefined} ...>
++                         <a
++                           suppressHydrationWarning={true}
++                           aria-current={undefined}
++                           className="relative px-4 py-2 text-sm font-bold rounded-full transition-all duration-300 t..."
++                           style={undefined}
++                           ref={function}
++                           onClick={function onClick}
++                           onMouseEnter={function onMouseEnter}
++                           onTouchStart={function onTouchStart}
++                           href="/blog"
++                         >
+-                         <div className="w-px h-5 bg-white/[0.08] mx-1">
+                        ...
+                      ...
+                ...
+        ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at a (<anonymous>)
+    at eval (app\components\Navbar.tsx:52:15)
+    at Array.map (<anonymous>)
+    at Navbar (app\components\Navbar.tsx:48:13)
+    at PrivacyPolicy (app\privacy-policy\page.tsx:145:7)
+  50 |             const activeColor = link.color === 'cyan' ? '#22d3ee' : link.color === 'purple...
+  51 |             return (
+> 52 |               <Link 
+     |               ^
+  53 |                 key={link.href}
+  54 |                 href={link.href} 
+  55 |                 suppressHydrationWarning
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[ClientError] process is not defined http://localhost:3000/privacy-policy undefined undefined
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6086)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6092)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6092)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6092)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6092)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6092)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://famous-mammoth-50.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6092)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior

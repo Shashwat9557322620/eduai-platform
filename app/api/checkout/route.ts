@@ -11,12 +11,6 @@ const ALLOWED_PLANS = [
   { name: 'Apex Overlord', creditAmount: 99999, price: 999 },
 ];
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
-
 export async function POST(req: Request) {
   const ip = (await headers()).get('x-forwarded-for') || 'unknown';
   if (!rateLimit(ip, 10, 60000)) {
@@ -45,6 +39,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid plan selected. Price mismatch detected." }, { status: 400 });
     }
 
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
     // Razorpay amount in paise (Rs 199 = 19900 paise)
     const options = {
       amount: matchedPlan.price * 100, 
@@ -52,15 +49,24 @@ export async function POST(req: Request) {
       receipt: `receipt_order_${Math.floor(Math.random() * 10000)}`,
     };
 
-    // Create actual Razorpay order
-    const order = await razorpay.orders.create(options);
+    let orderId = `mock_order_${Date.now()}`;
+
+    // If keys are provided, create actual Razorpay order
+    if (keyId && keySecret) {
+      const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+      const order = await razorpay.orders.create(options);
+      orderId = order.id;
+    } else {
+      console.warn("⚠️ Razorpay keys missing: Using DEV bypass mode.");
+    }
 
     return NextResponse.json({ 
-      orderId: order.id, 
+      orderId, 
       amount: options.amount, 
       currency: "INR",
       credits: matchedPlan.creditAmount,
       planName: matchedPlan.name,
+      isMock: !keyId, // flag to tell frontend to bypass UI
     });
 
   } catch (error: any) {

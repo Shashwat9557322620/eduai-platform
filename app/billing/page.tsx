@@ -1,9 +1,10 @@
 "use client";
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import MagneticCursor from '../components/MagneticCursor';
 import { useUser } from '@clerk/nextjs';
-import UnifiedBackground from '../components/UnifiedBackground';
+import Link from 'next/link';
+import PricingGradientBackground from '../components/backgrounds/PricingGradientBackground';
+
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     const script = document.createElement('script');
@@ -14,14 +15,46 @@ const loadRazorpayScript = () => {
   });
 };
 
+const PLANS = [
+  {
+    name: 'Starter Core',
+    tag: '01 // BASIC',
+    price: 199,
+    credits: 150,
+    accent: '#06b6d4',
+    accentRgb: '6,182,212',
+    features: ['150 AI Engine Credits', 'All 3 AI Modules', 'Basic Priority Queue', 'Email Support'],
+    popular: false,
+  },
+  {
+    name: 'Scholar Protocol',
+    tag: '02 // RECOMMENDED',
+    price: 499,
+    credits: 500,
+    accent: '#a855f7',
+    accentRgb: '168,85,247',
+    features: ['500 AI Engine Credits', 'All 3 AI Modules', 'Priority Processing', 'Export as PDF/TXT/MD', 'Share & Rate Results', 'Priority Support'],
+    popular: true,
+  },
+  {
+    name: 'Apex Overlord',
+    tag: '03 // UNLIMITED',
+    price: 999,
+    credits: 99999,
+    accent: '#ec4899',
+    accentRgb: '236,72,153',
+    features: ['Unlimited AI Credits', 'All 3 AI Modules', 'Instant Processing', 'All Export Formats', 'Priority Support', 'Early Access Features', 'Custom Study Plans'],
+    popular: false,
+  },
+];
+
 export default function Billing() {
   const { user, isSignedIn } = useUser();
-  const [currentCredits, setCurrentCredits] = useState(50);
+  const [currentCredits, setCurrentCredits] = useState(0);
   const [currentPlan, setCurrentPlan] = useState('Free Trial');
   const [isRedirecting, setIsRedirecting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Load actual user credits
   React.useEffect(() => {
     if (isSignedIn) {
       fetch('/api/user/credits')
@@ -36,12 +69,11 @@ export default function Billing() {
 
   const handlePurchase = async (planName: string, creditAmount: number, price: number) => {
     setIsRedirecting(planName);
-    
     setError(null);
     try {
       const sdkLoaded = await loadRazorpayScript();
       if (!sdkLoaded) {
-        setError('Razorpay SDK failed to load. Please check your internet connection.');
+        setError('Razorpay SDK failed to load. Check your connection.');
         setIsRedirecting(null);
         return;
       }
@@ -49,18 +81,19 @@ export default function Billing() {
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id || 'guest',
-          creditAmount: creditAmount,
-          price: price 
-        }),
+        body: JSON.stringify({ userId: user?.id || 'guest', creditAmount, price }),
       });
       
       const orderData = await response.json();
-
       if (!orderData.orderId) {
-        setError("Server error. Razorpay order could not be created.");
+        setError("Server error. Could not create order.");
         setIsRedirecting(null);
+        return;
+      }
+
+      if (orderData.isMock) {
+        // Dev bypass mode: Keys missing, directly simulate success
+        window.location.href = `/billing/success?credits=${orderData.credits}`;
         return;
       }
 
@@ -69,12 +102,10 @@ export default function Billing() {
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'EduAI Pro',
-        description: `Upgrade to ${planName} (${creditAmount} Credits)`,
+        description: `${planName} - ${creditAmount} Credits`,
         order_id: orderData.orderId,
-        theme: {
-          color: '#06b6d4' 
-        },
-        handler: function (response: any) {
+        theme: { color: '#06b6d4' },
+        handler: function () {
           window.location.href = `/billing/success?credits=${orderData.credits}`;
         },
         prefill: {
@@ -84,158 +115,160 @@ export default function Billing() {
       };
 
       const paymentObject = new (window as any).Razorpay(options);
-      
       paymentObject.on('payment.failed', function (response: any) {
         setError("Payment Failed: " + response.error.description);
       });
-      
       paymentObject.open();
-
-    } catch (err) {
-      setError("Billing system error. Please try again later.");
+    } catch {
+      setError("Billing system error. Please try again.");
     } finally {
       setIsRedirecting(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#020203] text-white font-sans relative overflow-x-hidden selection:bg-cyan-500/30">
-      
-      <UnifiedBackground />
-
-      <MagneticCursor />
+    <div className="min-h-screen bg-[#020203] text-white font-sans relative selection:bg-purple-500/30">
+      <PricingGradientBackground />
       <Navbar />
 
-      <div className="pt-36 pb-20 px-4 md:px-8 max-w-6xl mx-auto relative z-10 min-h-screen flex flex-col justify-center">
+      <div className="pt-36 pb-20 px-4 md:px-8 max-w-6xl mx-auto relative z-10">
         
         {error && (
-          <div className="mb-4 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm font-mono flex items-center gap-3 animate-pulse">
+          <div className="mb-6 bg-red-500/10 border border-red-500/50 text-red-400 px-5 py-3 rounded-xl text-sm font-mono flex items-center gap-3">
             <span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
             {error}
           </div>
         )}
 
+        {/* Header */}
         <div className="text-center mb-16">
-          <span className="text-xs font-mono text-cyan-400 tracking-[0.3em] uppercase border border-cyan-500/20 px-4 py-1.5 rounded-full bg-cyan-500/5">
-            Billing & Core Quota
-          </span>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mt-6 mb-4 uppercase">
-            Fuel Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500">Arsenal.</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-bold tracking-widest text-purple-400 mb-6">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            UPGRADE YOUR AI POWER
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 uppercase">
+            Choose Your{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">
+              Arsenal.
+            </span>
           </h1>
+          <p className="text-gray-400 text-lg max-w-xl mx-auto">
+            Unlock unlimited AI-powered study tools. One-time payments, no subscriptions.
+          </p>
         </div>
 
         {/* Current Balance */}
-        <div className="relative max-w-3xl mx-auto w-full rounded-3xl p-[1px] overflow-hidden mb-16 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 animate-pulse"></div>
-          <div className="relative bg-[#07070a]/90 backdrop-blur-3xl rounded-3xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 border border-white/5">
-            <div>
-              <p className="text-xs font-mono text-gray-500 uppercase tracking-widest mb-1">Current Active Account State</p>
-              <h2 className="text-2xl font-bold text-white tracking-tight">Plan Ecosystem: <span className="text-cyan-400">{currentPlan}</span></h2>
-              <p className="text-gray-400 text-sm mt-2 max-w-md font-light">Credits are consumed automatically every time the Curriculum Engine or AI modules deconstruct structural layouts.</p>
-            </div>
-            <div className="text-center md:text-right bg-white/[0.02] border border-white/5 px-8 py-6 rounded-2xl min-w-[200px] backdrop-blur-sm shadow-inner">
-              <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-500 font-mono">{currentCredits}</span>
-              <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mt-1">AI Engine Credits Remaining</p>
-            </div>
+        <div className="max-w-2xl mx-auto mb-16 p-6 rounded-2xl bg-[#07070a]/80 border border-white/5 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-mono text-gray-500 uppercase tracking-widest">Current Plan</p>
+            <p className="text-lg font-bold text-white">{currentPlan}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-mono text-gray-500 uppercase tracking-widest">Credits Left</p>
+            <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">{currentCredits}</p>
           </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch w-full mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          {PLANS.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative group rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-2 ${
+                plan.popular ? 'border-2 md:scale-105 z-10' : 'border border-white/5 hover:border-white/10'
+              }`}
+              style={plan.popular ? { borderColor: `${plan.accent}40` } : {}}
+            >
+              {/* Popular badge */}
+              {plan.popular && (
+                <div className="absolute -top-0 left-1/2 -translate-x-1/2 z-20 px-4 py-1.5 rounded-b-xl text-[10px] font-black tracking-[0.2em] uppercase text-white" style={{ background: plan.accent }}>
+                  Most Popular
+                </div>
+              )}
 
-          {/* Tier 1 */}
-          <div className="premium-pricing-card group">
-            {/* The hidden layer for effects only */}
-            <div className="absolute inset-0 rounded-[2rem] overflow-hidden z-0">
-              <div className="card-bg-glow bg-cyan-500/10"></div>
-              <div className="card-border-line"></div>
-            </div>
-            
-            <div className="card-main-content">
-              <span className="tier-tag text-cyan-400">01 // BASIC</span>
-              <h3 className="text-2xl md:text-3xl font-bold text-white mt-2 mb-2 tracking-tight whitespace-normal break-words leading-tight">Starter Core</h3>
-              <div className="flex items-baseline gap-1 mb-8 mt-2">
-                <span className="text-4xl font-black font-mono">₹199</span>
-                <span className="text-gray-500 text-xs">/ One Time</span>
+              {/* Background */}
+              <div className="absolute inset-0 bg-[#07070a]/90" />
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                style={{ background: `radial-gradient(circle at 50% 0%, ${plan.accent}10, transparent 60%)` }}
+              />
+
+              <div className="relative p-8 flex flex-col h-full">
+                {/* Tag */}
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] mb-2" style={{ color: plan.accent }}>
+                  {plan.tag}
+                </span>
+
+                {/* Name */}
+                <h3 className="text-2xl font-black text-white mb-2 tracking-tight">{plan.name}</h3>
+
+                {/* Price */}
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="text-4xl font-black font-mono text-white">₹{plan.price}</span>
+                  <span className="text-gray-500 text-xs">/ One Time</span>
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-3 mb-8 flex-grow">
+                  {plan.features.map((feature, j) => (
+                    <li key={j} className="flex items-center gap-3 text-sm text-gray-300">
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke={plan.accent} viewBox="0 0 24 24" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA Button */}
+                <button
+                  onClick={() => handlePurchase(plan.name, plan.credits, plan.price)}
+                  disabled={isRedirecting !== null}
+                  className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-300 ${
+                    plan.popular
+                      ? 'text-white shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] hover:scale-[1.02]'
+                      : 'bg-white/5 border border-white/10 text-white hover:bg-white hover:text-black'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  style={plan.popular ? { background: `linear-gradient(135deg, ${plan.accent}, ${plan.accent}cc)` } : {}}
+                >
+                  {isRedirecting === plan.name ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      Processing...
+                    </span>
+                  ) : (
+                    `Get ${plan.name}`
+                  )}
+                </button>
               </div>
-              <ul className="space-y-4 mb-10 text-sm text-gray-400 font-medium flex-grow">
-                <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_8px_#06b6d4]"></span> 150 Engine Credits</li>
-              </ul>
-              <button 
-                onClick={() => handlePurchase('Starter Core', 150, 199)}
-                disabled={isRedirecting !== null}
-                className="w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest bg-white/5 border border-white/10 hover:bg-white hover:text-black transition-all"
-              >
-                {isRedirecting === 'Starter Core' ? 'Loading...' : 'Deploy Starter Core'}
-              </button>
             </div>
-          </div>
-
-          {/* Tier 2 */}
-          <div className="premium-pricing-card group relative highlighted-card">
-            {/* 🔥 TAG KO AB POORI AZAADI HAI (Outside hidden wrapper) 🔥 */}
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-30 bg-gradient-to-r from-purple-500 to-indigo-500 text-black text-[10px] font-black tracking-[0.2em] px-4 py-1.5 rounded-full uppercase shadow-[0_0_25px_rgba(168,85,247,0.5)] whitespace-nowrap">
-              Most Popular Core
-            </div>
-
-            {/* Background effects clipped to card shape */}
-            <div className="absolute inset-0 rounded-[2rem] overflow-hidden z-0">
-              <div className="card-bg-glow bg-purple-500/20 opacity-100"></div>
-              <div className="card-border-line !bg-gradient-to-r !from-purple-500 !to-indigo-500 !opacity-40 group-hover:!opacity-100"></div>
-            </div>
-
-            <div className="card-main-content !border-purple-500/20 bg-[#09090e]/95">
-              <span className="tier-tag text-purple-400">02 // RECOMMENDED</span>
-              <h3 className="text-2xl md:text-3xl font-bold text-white mt-2 mb-2 tracking-tight whitespace-normal break-words leading-tight">Scholar Protocol</h3>
-              <div className="flex items-baseline gap-1 mb-8 mt-2">
-                <span className="text-4xl font-black font-mono">₹499</span>
-                <span className="text-gray-500 text-xs">/ One Time</span>
-              </div>
-              <ul className="space-y-4 mb-10 text-sm text-gray-300 font-medium flex-grow">
-                <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-purple-400 rounded-full shadow-[0_0_8px_#a855f7]"></span> 500 Engine Credits</li>
-              </ul>
-              <button 
-                onClick={() => handlePurchase('Scholar Protocol', 500, 499)}
-                disabled={isRedirecting !== null}
-                className="w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest bg-gradient-to-r from-purple-500 to-indigo-600 text-white transition-all transform hover:scale-[1.02]"
-              >
-                {isRedirecting === 'Scholar Protocol' ? 'Loading...' : 'Deploy Scholar Core'}
-              </button>
-            </div>
-          </div>
-
-          {/* Tier 3 */}
-          <div className="premium-pricing-card group">
-            {/* The hidden layer for effects only */}
-            <div className="absolute inset-0 rounded-[2rem] overflow-hidden z-0">
-              <div className="card-bg-glow bg-fuchsia-500/10"></div>
-              <div className="card-border-line"></div>
-            </div>
-
-            <div className="card-main-content">
-              <span className="tier-tag text-fuchsia-400">03 // UNLIMITED</span>
-              <h3 className="text-2xl md:text-3xl font-bold text-white mt-2 mb-2 tracking-tight whitespace-normal break-words leading-tight">Apex Overlord</h3>
-              <div className="flex items-baseline gap-1 mb-8 mt-2">
-                <span className="text-4xl font-black font-mono">₹999</span>
-                <span className="text-gray-500 text-xs">/ Month</span>
-              </div>
-              <ul className="space-y-4 mb-10 text-sm text-gray-400 font-medium flex-grow">
-                <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-fuchsia-400 rounded-full shadow-[0_0_8px_#d946ef]"></span> Unlimited High-Speed Credits</li>
-              </ul>
-              <button 
-                onClick={() => handlePurchase('Apex Overlord', 99999, 999)}
-                disabled={isRedirecting !== null}
-                className="w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest bg-white/5 border border-white/10 hover:bg-white hover:text-black transition-all"
-              >
-                {isRedirecting === 'Apex Overlord' ? 'Loading...' : 'Deploy Apex Overlord'}
-              </button>
-            </div>
-          </div>
-
+          ))}
         </div>
 
-      </div>
+        {/* Trust badges */}
+        <div className="mt-16 flex flex-wrap items-center justify-center gap-8 text-xs text-gray-500">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            Secure Razorpay Payment
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+            Instant Credit Activation
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            Full Refund Policy
+          </div>
+        </div>
 
+        {/* FAQ snippet */}
+        <div className="mt-16 max-w-2xl mx-auto text-center">
+          <p className="text-gray-500 text-sm">
+            Credits never expire. Each AI generation uses 1 credit. 
+            Need help? <Link href="/support" className="text-cyan-400 hover:text-cyan-300 underline">Contact Support</Link>
+          </p>
+        </div>
       </div>
+    </div>
   );
 }
