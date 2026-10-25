@@ -7,14 +7,10 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Webhook replay protection
-const processedWebhooks = new Set<string>();
-
-// Allowed plans for cross-checking
-const ALLOWED_PLANS: Record<string, { credits: number }> = {
-  'Starter Core': { credits: 150 },
-  'Scholar Protocol': { credits: 500 },
-  'Apex Overlord': { credits: 99999 },
+const ALLOWED_PLANS: Record<string, { credits: number; validPrices: number[] }> = {
+  'Starter': { credits: 150, validPrices: [99, 69, 199] },
+  'Scholar Pro': { credits: 500, validPrices: [299, 199, 499] },
+  'Apex Overlord': { credits: 99999, validPrices: [799, 599, 999] },
 };
 
 export async function POST(req: Request) {
@@ -22,100 +18,136 @@ export async function POST(req: Request) {
     const body = await req.text();
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-    // Verify webhook signature
     if (webhookSecret) {
       const signature = req.headers.get('x-razorpay-signature');
-      if (!signature) {
-        return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
-      }
+      if (!signature) return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
 
       const expectedSign = crypto
         .createHmac('sha256', webhookSecret)
         .update(body)
         .digest('hex');
 
-      // Constant-time comparison to prevent timing attacks
       const trusted = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSign));
-      if (!trusted) {
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
-      }
+      if (!trusted) return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
     const event = JSON.parse(body);
+    const eventId = event.payload?.payment?.entity?.id || event.id; // Could be subscription event
 
-    // Idempotency check
-    const eventId = event.payload?.payment?.entity?.id;
-    if (eventId && processedWebhooks.has(eventId)) {
-      return NextResponse.json({ message: 'Already processed' });
-    }
-    if (eventId) processedWebhooks.add(eventId);
-
-    // Only process payment.captured events
-    if (event.event !== 'payment.captured') {
-      return NextResponse.json({ message: 'Ignored event type' });
-    }
-
-    const payment = event.payload.payment.entity;
-    const orderId = payment.order_id;
-    const paymentId = payment.id;
-    const amount = payment.amount; // in paise
-    const notes = payment.notes || {};
-
-    // Validate against our allowed plans
-    const planName = notes.plan_name || '';
-    const plan = ALLOWED_PLANS[planName];
-    if (!plan) {
-      console.error(`Unknown plan: ${planName}`);
-      return NextResponse.json({ error: 'Unknown plan' }, { status: 400 });
-    }
-
-    // Verify amount matches expected plan price
-    const expectedAmount = planName === 'Starter Core' ? 19900 :
-      planName === 'Scholar Protocol' ? 49900 :
-      planName === 'Apex Overlord' ? 99900 : 0;
-
-    if (amount < expectedAmount) {
-      console.error(`Amount mismatch for ${planName}: got ${amount}, expected ${expectedAmount}`);
-      return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
-    }
-
-    const userId = notes.user_id;
-
-    // Update or create payment record using admin client
-    await supabaseAdmin.from('payments').upsert({
-      order_id: orderId,
-      payment_id: paymentId,
-      user_id: userId,
-      amount: amount / 100, // convert paise to rupees
-      currency: payment.currency,
-      status: 'captured',
-      plan_name: planName,
-      credits_purchased: plan.credits,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'order_id' });
-
-    // Add credits to user using admin client
-    if (userId) {
-      const { data: existing } = await supabaseAdmin
-        .from('user_credits')
-        .select('credits')
-        .eq('user_id', userId)
+    // 1. Idempotency Check (DB backed)
+    if (eventId) {
+      const { data: existingEvent } = await supabaseAdmin
+        .from('payment_events')
+        .select('id')
+        .eq('event_id', eventId)
         .single();
+      
+      if (existingEvent) {
+        return NextResponse.json({ message: 'Already processed' });
+      }
 
-      const currentCredits = existing?.credits || 0;
-      const newCredits = currentCredits + plan.credits;
+      await supabaseAdmin.from('payment_events').insert({
+        event_id: eventId,
+        event_type: event.event,
+        payload: event
+      });
+    }
 
-      await supabaseAdmin
-        .from('user_credits')
-        .upsert({
+    // 2. Handle Subscriptions
+    if (event.event.startsWith('subscription.')) {
+        const sub = event.payload.subscription.entity;
+        
+        await supabaseAdmin.from('subscription_history').upsert({
+            subscription_id: sub.id,
+            user_id: sub.notes?.user_id || 'unknown',
+            plan_name: sub.notes?.plan_name || 'unknown',
+            status: sub.status, // active, completed, cancelled, halted
+            current_start: sub.current_start ? new Date(sub.current_start * 1000).toISOString() : null,
+            current_end: sub.current_end ? new Date(sub.current_end * 1000).toISOString() : null,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'subscription_id' });
+        
+        // Let subscription events pass through (we might need to add credits on subscription.charged)
+        if (event.event !== 'subscription.charged') {
+           return NextResponse.json({ status: 'ok' });
+        }
+    }
+
+    // 3. Process Payment/Subscription Captured
+    if (event.event === 'payment.captured' || event.event === 'subscription.charged') {
+        const payment = event.payload.payment.entity;
+        const orderId = payment.order_id;
+        const paymentId = payment.id;
+        const amount = payment.amount; 
+        const notes = payment.notes || {};
+        const userId = notes.user_id;
+
+        const planName = notes.plan_name || '';
+        const plan = ALLOWED_PLANS[planName];
+        if (!plan) return NextResponse.json({ error: 'Unknown plan' }, { status: 400 });
+
+        const amountInRupees = amount / 100;
+        if (!plan.validPrices.includes(amountInRupees)) {
+          return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
+        }
+
+        // Update Payment Record
+        await supabaseAdmin.from('payments').upsert({
+          order_id: orderId || paymentId,
+          payment_id: paymentId,
           user_id: userId,
-          credits: newCredits,
-          plan_name: planName === 'Apex Overlord' ? 'Apex Overlord' : planName,
+          amount: amountInRupees,
+          currency: payment.currency,
+          status: 'captured',
+          plan_name: planName,
+          credits_purchased: plan.credits,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+        }, { onConflict: 'order_id' });
 
-      // Log the credit addition
-      console.log(`✅ Added ${plan.credits} credits to user ${userId}. New balance: ${newCredits}`);
+        // Atomic Credit Addition
+        if (userId) {
+          const { data, error } = await supabaseAdmin.rpc('atomic_add_credits', {
+            p_user_id: userId,
+            p_amount: plan.credits,
+            p_plan_name: planName === 'Apex Overlord' ? 'Apex Overlord' : planName,
+            p_reference_id: paymentId
+          });
+
+          if (error) {
+              console.error("Failed to atomically add credits:", error);
+          } else {
+              console.log(`✅ Atomically added ${plan.credits} credits to user ${userId}. New balance: ${data?.remaining}`);
+          }
+        }
+
+        // Affiliate processing
+        const affiliateCode = notes.affiliate_code;
+        if (affiliateCode && userId) {
+          try {
+            const { data: affiliate } = await supabaseAdmin
+              .from('affiliates')
+              .select('*')
+              .eq('affiliate_code', affiliateCode)
+              .single();
+
+            if (affiliate) {
+              const commission = amountInRupees * Number(affiliate.commission_rate || 0.30);
+              await supabaseAdmin.from('affiliate_conversions').insert({
+                affiliate_id: affiliate.id,
+                order_id: orderId || paymentId,
+                buyer_user_id: userId,
+                amount: amountInRupees,
+                commission: commission
+              });
+              await supabaseAdmin.from('affiliates').update({
+                balance: Number(affiliate.balance || 0) + commission,
+                total_earned: Number(affiliate.total_earned || 0) + commission
+              }).eq('id', affiliate.id);
+            }
+          } catch (e) {
+            console.error("Affiliate tracking error:", e);
+          }
+        }
     }
 
     return NextResponse.json({ status: 'ok' });

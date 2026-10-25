@@ -29,6 +29,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+dev.log
+dev-error.log
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -43,3 +46,27 @@ next-env.d.ts
 # clerk configuration (can include secrets)
 /.clerk/
 nul
+
+# ===== PRIVATE / SENSITIVE FILES =====
+
+# SQL migration & restore scripts (contain DB structure + secrets)
+MASTER_RESTORE.sql
+supabase_migrations_billing_rebuild.sql
+supabase_setup_affiliates.sql
+supabase_setup_all.sql
+supabase_update_credits.sql
+supabase_update_refunds.sql
+supabase_update_support.sql
+scripts/master_database_setup.sql
+
+# Test / debug scripts with API keys or DB credentials
+test_supabase.js
+
+# One-off dev utility files
+unpack.js
+proxy.ts
+code-review.txt
+deepseek_prompt.txt
+
+# Large snapshot / source-dump text files
+*.txt

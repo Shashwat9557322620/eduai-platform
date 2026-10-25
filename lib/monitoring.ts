@@ -66,7 +66,7 @@ function reportVital(name: string, value: number, delta: number, id: string) {
   };
   listeners.forEach((cb) => cb(metric));
   // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     const color = metric.rating === 'good' ? '#34d399' : metric.rating === 'needs-improvement' ? '#fbbf24' : '#f87171';
     console.log(`%c[Vital] ${name}: ${metric.value} (${metric.rating})`, `color: ${color}; font-weight: bold`);
   }
@@ -148,7 +148,7 @@ export function setMonitoringUserId(id: string) {
 
 function reportError(error: ErrorReport) {
   errorBuffer.push(error);
-  if (process.env.NODE_ENV === 'development') {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.error('[Monitor] Error:', error.message, error.stack);
   }
   // Flush to server periodically
@@ -213,7 +213,7 @@ export function measurePerformance(name: string, fn: () => void) {
   const start = performance.now();
   fn();
   const duration = performance.now() - start;
-  if (process.env.NODE_ENV === 'development') {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log(`%c[Perf] ${name}: ${duration.toFixed(2)}ms`, 'color: #22d3ee; font-weight: bold');
   }
   return duration;

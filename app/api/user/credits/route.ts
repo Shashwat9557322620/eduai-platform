@@ -28,8 +28,8 @@ export async function GET() {
       // Create initial record
       await supabase
         .from('user_credits')
-        .insert({ user_id: userId, credits: 30, plan_name: 'Free Trial' });
-      return NextResponse.json({ credits: 30, plan_name: 'Free Trial' });
+        .insert({ user_id: userId, credits: 10, plan_name: 'Free Trial' });
+      return NextResponse.json({ credits: 10, plan_name: 'Free Trial' });
     }
 
     return NextResponse.json({ credits: data.credits || 0, plan_name: data.plan_name || 'Free Trial' });

@@ -83,6 +83,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+import CursorSystem from './components/CursorSystem';
+import CreditWarningBanner from './components/CreditWarningBanner';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -140,6 +143,8 @@ export default function RootLayout({
           <SkipToContent />
           <Providers>
             <ToastProvider>
+              <CursorSystem />
+              <CreditWarningBanner />
               <main id="main-content" role="main" aria-label="Main content">
                 <SmoothScroll>
                   {children}

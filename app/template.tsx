@@ -23,6 +23,10 @@ const pageVariants = {
       duration: 0.5,
       ease: "easeOut" as const,
     },
+    transitionEnd: {
+      filter: "none",
+      transform: "none",
+    }
   },
   exit: {
     opacity: 0,

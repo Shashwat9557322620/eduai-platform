@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 import { randomBytes } from 'crypto';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+const resend = new Resend(process.env.RESEND_API_KEY);
 import { rateLimit } from '@/lib/rateLimit';
 import { supportSchema } from '@/lib/validation';
 import { headers } from 'next/headers';
@@ -26,7 +32,10 @@ export async function POST(req: Request) {
 
     const trackingId = generateTrackingId();
 
-    const { data, error } = await supabase.from('support_tickets').insert({
+    const { data, error } = await supabaseAdmin.from('support_tickets').insert({
+      name: 'User',
+      email: email,
+      type: 'general',
       user_email: email,
       subject: subject || 'No Subject',
       message,
@@ -38,23 +47,13 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error('Support ticket insert error:', error);
-      throw error;
+      return NextResponse.json({ error: 'Database Error: ' + error.message + ' (Hint: Did you run the SQL script?)' }, { status: 500 });
     }
 
     // Send email with tracking ID
     try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"EduAI Support" <noreply@eduai.com>',
+      await resend.emails.send({
+        from: 'EduAI <onboarding@resend.dev>',
         to: email,
         subject: `Support Ticket Created - #${trackingId}`,
         html: `
@@ -107,8 +106,8 @@ export async function POST(req: Request) {
       tracking_id: trackingId,
       message: `Support ticket created! Your tracking ID is: ${trackingId}`
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Support ticket creation error:', error);
-    return NextResponse.json({ error: 'Failed to create ticket' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create ticket' }, { status: 500 });
   }
 }

@@ -230,67 +230,27 @@ function CinematicCamera() {
 }
 
 // ── Main Background Component ────────────────────────────────
+// Replaced heavy WebGL R3F Canvas with ultra-smooth CSS gradients to fix hanging issues
 
 export default function CinematicBackground({ page = "dashboard" }: { page?: string }) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    const t = setTimeout(checkMobile, 100);
-    window.addEventListener("resize", checkMobile);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener("resize", checkMobile);
-    };
-  }, []);
-
   return (
-    <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true" style={{ background: '#050508' }}>
-      <Canvas 
-        dpr={isMobile ? 1 : [1, 2]} 
-        gl={{ 
-          antialias: false, 
-          powerPreference: "high-performance",
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2
-        }}
-      >
-        <color attach="background" args={["#050508"]} />
-        <fog attach="fog" args={["#050508", 10, 60]} />
-        
-        <CinematicCamera />
-        
-        <ambientLight intensity={0.2} color="#1a2332" />
-        <directionalLight position={[10, 20, 10]} intensity={1.5} color="#00d4ff" />
-        <directionalLight position={[-10, -20, -10]} intensity={0.5} color="#7b2cbf" />
+    <div className="fixed inset-0 pointer-events-none z-0 bg-[#050508] overflow-hidden">
+      {/* Base Grid Pattern */}
+      <div 
+        className="absolute inset-0 opacity-[0.03]" 
+        style={{ 
+          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+          backgroundSize: '40px 40px' 
+        }} 
+      />
+      
+      {/* Glowing Orbs */}
+      <div className="absolute top-[-15%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-[#7b2cbf]/10 blur-[120px] animate-pulse-soft" />
+      <div className="absolute bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#00d4ff]/10 blur-[120px]" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-[20%] right-[20%] w-[30vw] h-[30vw] rounded-full bg-[#e0aaff]/5 blur-[100px] animate-pulse-soft" style={{ animationDelay: '1s' }} />
 
-        <CrystalObservatory />
-        <InfiniteMonoliths count={isMobile ? 50 : 250} />
-
-        <Environment resolution={256}>
-          <ambientLight intensity={1} color="#00d4ff" />
-          <pointLight position={[10, 10, 10]} intensity={2} color="#7b2cbf" />
-          <pointLight position={[-10, -10, -10]} intensity={2} color="#e0aaff" />
-        </Environment>
-
-        {!isMobile && (
-          <EffectComposer multisampling={0}>
-            <Bloom 
-              luminanceThreshold={0.2} 
-              luminanceSmoothing={0.9} 
-              intensity={1.5} 
-              mipmapBlur 
-            />
-            <ChromaticAberration 
-              blendFunction={BlendFunction.NORMAL} 
-              offset={new THREE.Vector2(0.002, 0.002)} 
-            />
-            <Noise opacity={0.03} blendFunction={BlendFunction.OVERLAY} />
-            <Vignette eskil={false} offset={0.1} darkness={1.1} blendFunction={BlendFunction.MULTIPLY} />
-          </EffectComposer>
-        )}
-      </Canvas>
+      {/* Cinematic Vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#050508_100%)] opacity-80" />
     </div>
   );
 }

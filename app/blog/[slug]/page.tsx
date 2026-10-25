@@ -1,8 +1,11 @@
 "use client";
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import BlogArticleBackground from '../../components/backgrounds/BlogArticleBackground';
 import Navbar from '../../components/Navbar';
+import { MagneticButton } from '../../components/ui/MagneticButton';
 
 const BLOG_CONTENT: Record<string, { title: string; date: string; readTime: string; author: string; content: string }> = {
   'ai-study-tips-2025': {
@@ -142,8 +145,54 @@ export default function BlogPost() {
     `
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const proseRef = useRef<HTMLDivElement>(null);
+
+  // Reading progress physics
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  // Cinematic IntersectionObserver for prose content
+  useEffect(() => {
+    if (!proseRef.current) return;
+    
+    // Select all paragraphs, headings, and div blocks inside the prose
+    const elements = proseRef.current.querySelectorAll('p, h2, h3, div');
+    
+    // Initialize elements with hidden state
+    elements.forEach(el => {
+      el.classList.add('prose-reveal-hidden');
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove('prose-reveal-hidden');
+          entry.target.classList.add('prose-reveal-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      rootMargin: "0px 0px -10% 0px", // Trigger slightly before it hits the bottom
+      threshold: 0.1
+    });
+
+    elements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [post.content]);
+
   return (
-    <div className="min-h-screen bg-[#020203] text-white font-sans relative overflow-hidden">
+    <div ref={containerRef} className="min-h-screen bg-[#020203] text-white font-sans relative overflow-hidden">
+      {/* Physics-based Reading Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-cyan-400 to-purple-600 origin-left z-[100]"
+        style={{ scaleX }}
+      />
       <BlogArticleBackground />
 
       <Navbar />
@@ -153,7 +202,12 @@ export default function BlogPost() {
             ← Back to Blog
           </Link>
           
-          <div className="mb-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1, type: "spring", damping: 20 }}
+            className="mb-12"
+          >
             <span className="text-xs font-mono text-purple-400 mb-4 block tracking-widest uppercase">LATEST ARTICLE</span>
             <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight leading-tight">{post.title}</h1>
             
@@ -164,17 +218,23 @@ export default function BlogPost() {
               <span>•</span>
               <span className="text-cyan-400">{post.author}</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-400 prose-a:text-cyan-400" 
+          <div ref={proseRef} className="prose prose-invert prose-lg max-w-none prose-headings:text-transparent prose-headings:bg-clip-text prose-headings:bg-gradient-to-r prose-headings:from-white prose-headings:to-white/60 prose-p:text-gray-400 prose-a:text-cyan-400" 
                dangerouslySetInnerHTML={{ __html: post.content }} />
 
-          <div className="mt-20 pt-8 border-t border-white/10 text-center">
-            <h3 className="text-2xl font-bold mb-6">Ready to apply this to your studies?</h3>
-            <Link href="/optimizer" className="inline-block px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:scale-105 transition-transform shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ type: "spring", damping: 15, mass: 0.8 }}
+            className="mt-20 pt-12 border-t border-white/10 flex flex-col items-center text-center"
+          >
+            <h3 className="text-3xl font-black tracking-tight mb-8">Ready to apply this to your studies?</h3>
+            <MagneticButton variant="primary" className="px-10 py-5 text-lg">
               Launch Curriculum Engine
-            </Link>
-          </div>
+            </MagneticButton>
+          </motion.div>
       </div>
     </div>
   );

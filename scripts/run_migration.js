@@ -2,7 +2,9 @@
 const fs = require('fs');
 const https = require('https');
 
-const sql = fs.readFileSync('scripts/supabase_refund_tracking.sql', 'utf8');
+const sqlFile = process.argv[2] || 'scripts/master_database_setup.sql';
+console.log(`Reading SQL from: ${sqlFile}`);
+const sql = fs.readFileSync(sqlFile, 'utf8');
 const envContent = fs.readFileSync('.env.local', 'utf8');
 
 function getEnv(key) {
@@ -49,9 +51,6 @@ const req = https.request(options, (res) => {
   res.on('end', () => {
     if (res.statusCode === 200 || res.statusCode === 201) {
       console.log('✅ SQL migration executed successfully!');
-      console.log('Tables created/updated:');
-      console.log('  - refund_requests');
-      console.log('  - support_tickets (updated with tracking_id, admin_response)');
       process.exit(0);
     } else {
       // Try alternative approach - direct SQL endpoint
@@ -133,9 +132,6 @@ function tryRawSql(url, key, query) {
       } else {
         console.log(`\n❌ Could not run SQL automatically (status ${res.statusCode}).`);
         console.log('Response:', body.slice(0, 500));
-        console.log('\n⚠️  You need to run the SQL manually in Supabase Dashboard.');
-        console.log('   Opening instructions for you...\n');
-        printInstructions(projectRef);
         process.exit(1);
       }
     });
@@ -143,33 +139,9 @@ function tryRawSql(url, key, query) {
 
   req3.on('error', (e) => {
     console.error('Raw SQL endpoint failed:', e.message);
-    console.log('\n⚠️  You need to run the SQL manually in Supabase Dashboard.');
-    printInstructions(projectRef);
     process.exit(1);
   });
 
   req3.write(query);
   req3.end();
-}
-
-function printInstructions(ref) {
-  console.log('┌─────────────────────────────────────────────────────┐');
-  console.log('│                                                     │');
-  console.log('│   📋 STEP-BY-STEP: Run SQL in Supabase Dashboard    │');
-  console.log('│                                                     │');
-  console.log('└─────────────────────────────────────────────────────┘');
-  console.log();
-  console.log('1️⃣  Open this link in your browser:');
-  console.log(`   https://supabase.com/dashboard/project/${ref}/sql/new`);
-  console.log();
-  console.log('2️⃣  Copy the entire content of this file:');
-  console.log('   📄 scripts/supabase_refund_tracking.sql');
-  console.log();
-  console.log('3️⃣  Paste it in the SQL Editor on the Supabase page');
-  console.log();
-  console.log('4️⃣  Click the "Run" button (▶)');
-  console.log();
-  console.log('5️⃣  You should see "Success. No rows returned" ✅');
-  console.log();
-  console.log('That is it! Takes only 30 seconds. 🚀');
 }

@@ -2,63 +2,9 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { rateLimit } from '@/lib/rateLimit';
 import { flashcardSchema } from '@/lib/validation';
+import { validateCredits, commitCreditDeduction, logTokenUsage, logUsageEvent } from '@/lib/credits';
+import { calculateCreditCost } from '@/lib/tokenBillingEngine';
 import { headers } from 'next/headers';
-
-async function logUserHistory(userId: string, toolName: string, input: any, creditsUsed: number = 1) {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    await fetch(`${supabaseUrl}/rest/v1/user_history`, {
-      method: 'POST',
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
-        user_id: userId,
-        tool_name: toolName,
-        input: typeof input === 'string' ? input : JSON.stringify(input),
-        credits_used: creditsUsed,
-        created_at: new Date().toISOString()
-      })
-    });
-  } catch (e) {
-    console.error('History log error:', e);
-  }
-}
-
-async function checkAndDeductCredit(userId: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    const response = await fetch(`${supabaseUrl}/rest/v1/user_credits?user_id=eq.${userId}&select=credits`, {
-      headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-    });
-    const data = await response.json();
-    const userRecord = data[0];
-    if (!userRecord || userRecord.credits <= 0) {
-      return { ok: false, error: "CREDIT_LIMIT_EXCEEDED: No credits left. Please upgrade." };
-    }
-    const currentCredits = userRecord.credits ?? 0;
-    const newCredits = Math.max(0, currentCredits - 1);
-    await fetch(`${supabaseUrl}/rest/v1/user_credits?user_id=eq.${userId}`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ credits: newCredits, updated_at: new Date().toISOString() })
-    });
-    return { ok: true };
-  } catch (e) {
-    console.error('Credit check error:', e);
-    return { ok: true };
-  }
-}
 
 export async function POST(req: Request) {
   const ip = (await headers()).get('x-forwarded-for') || 'unknown';
@@ -68,8 +14,6 @@ export async function POST(req: Request) {
 
   let userId: string | null = null;
   let body: { text?: string; userId?: string } | null = null;
-
-  // Clone request so we can fall back to text() if JSON parse fails
   const clonedReq = req.clone();
 
   try {
@@ -80,24 +24,22 @@ export async function POST(req: Request) {
     if (!validation.success) {
       return NextResponse.json({ error: validation.error.flatten() }, { status: 400 });
     }
-    const { text } = validation.data;
+    const { text, images } = validation.data;
 
     const effectiveUserId = authUserId || userId;
+    const userGeminiKey = req.headers.get('x-user-gemini-key');
+    const isCustomKey = !!userGeminiKey;
 
-    if (!effectiveUserId) {
-      // Allow basic usage without auth for demo purposes
-    }
-
-    if (effectiveUserId) {
-      const creditCheck = await checkAndDeductCredit(effectiveUserId);
+    if (!isCustomKey) {
+      const creditCheck = await validateCredits(effectiveUserId, 0.05, ip);
       if (!creditCheck.ok) {
-        return NextResponse.json({ error: creditCheck.error }, { status: 403 });
+        return NextResponse.json({ error: creditCheck.error || 'CREDIT_LIMIT_EXCEEDED' }, { status: 403 });
       }
     }
 
-    const apiKey = process.env.Gemini_Api_Key;
+    const apiKey = userGeminiKey || process.env.Gemini_Api_Key;
     if (!apiKey) {
-      return NextResponse.json({ error: "API Key missing in environment variables" }, { status: 500 });
+      return NextResponse.json({ error: "API key missing in .env.local" }, { status: 500 });
     }
 
     const prompt = `You are an expert educator creating high-quality flashcards that maximize learning retention.
@@ -119,20 +61,36 @@ export async function POST(req: Request) {
     If the text is very short (like a greeting), create a simple, engaging flashcard from it.
     If the text is empty or nonsensical, return [{"front": "Ready to learn?", "back": "Paste some content and I'll create flashcards for you!"}]
 
-    Text to create flashcards from: ${text}`;
+    Text to create flashcards from: ${text || 'See attached documents'}`;
 
+    const promptParts: any[] = [{ text: prompt }];
+    if (images && images.length > 0) {
+      for (const img of images) {
+        promptParts.push({
+          inlineData: {
+            mimeType: img.mimeType,
+            data: img.data,
+          }
+        });
+      }
+    }
+
+    const modelName = 'gemini-2.5-flash';
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
+          contents: [{ parts: promptParts }]
         })
       }
     );
 
     if (!geminiResponse.ok) {
+      if (geminiResponse.status === 429) {
+        return NextResponse.json({ error: "Servers are experiencing high traffic right now. Please try again in 15 seconds." }, { status: 429 });
+      }
       const errData = await geminiResponse.json();
       throw new Error(errData.error?.message || "Gemini API failed");
     }
@@ -148,32 +106,34 @@ export async function POST(req: Request) {
     try {
       flashcards = JSON.parse(rawText);
     } catch {
-      // Fallback: split text into simple flashcards
       const lines = rawText.split('\n').filter((l: string) => l.trim());
       flashcards = lines.slice(0, 10).map((line: string, i: number) => ({
         front: line.replace(/^\d+[.):\s]+/, '').slice(0, 100) || `Concept ${i + 1}`,
         back: lines[i + 1]?.replace(/^\d+[.):\s]+/, '').slice(0, 200) || 'See notes',
       }));
     }
+
+    // Phase 5 & 3: Token Accounting & Safe Deduction
+    if (effectiveUserId && !isCustomKey) {
+      const usageMetadata = geminiData.usageMetadata;
+      const requestId = crypto.randomUUID();
+      const actualCost = calculateCreditCost(modelName, usageMetadata);
+      
+      await commitCreditDeduction(effectiveUserId, actualCost, 'flashcards', requestId);
+      await logTokenUsage(effectiveUserId, 'flashcards', modelName, usageMetadata, actualCost, requestId);
+      await logUsageEvent(effectiveUserId, 'flashcards', { text: text?.slice(0, 100) }, { success: true }, actualCost);
+    }
+
     return NextResponse.json({ flashcards });
 
   } catch (error: unknown) {
     console.error("Flashcard Error:", error);
-    // Fallback: Generate flashcards from text splitting
-    try {
-      const text = await clonedReq.text();
-      const cards = text.split('\n\n').map((block, i) => ({
-        id: i,
-        front: block.split('\n')[0] || `Card ${i+1}`,
-        back: block.split('\n').slice(1).join('\n') || 'No content'
-      }));
-      return NextResponse.json({ flashcards: cards });
-    } catch {
-      return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to parse data" }, { status: 500 });
-    }
-  } finally {
-    if (userId && body) {
-      logUserHistory(userId, 'flashcards', `text: ${String(body?.text || '').slice(0, 100)}`);
-    }
+    
+    // Log failure
+    const idToLog = userId || ip || 'anonymous';
+    await logUsageEvent(idToLog, 'flashcards', { text: body?.text?.slice(0, 100) }, { error: String(error) }, 0, 'failed', String(error));
+    
+    // Instead of parsing the raw JSON request body as flashcards, return a clear error.
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to generate flashcards. Please try again or rephrase your text." }, { status: 500 });
   }
 }

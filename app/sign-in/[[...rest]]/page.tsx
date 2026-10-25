@@ -1,25 +1,25 @@
 "use client";
-import { SignUp } from "@clerk/nextjs";
+import { SignIn } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import AuthFlowBackground from '../components/backgrounds/AuthFlowBackground';
+import AuthFlowBackground from '../../components/backgrounds/AuthFlowBackground';
 
-export default function SignUpPage() {
+export default function SignInPage() {
   return (
     <div className="min-h-screen bg-[#020203] flex items-center justify-center px-4 relative overflow-hidden">
       <AuthFlowBackground />
       
       {/* Animated glow ring behind the card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[500px] h-[500px] rounded-full bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-pink-500/10 blur-[100px] animate-glow-orbit" />
+        <div className="w-[500px] h-[500px] rounded-full bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-purple-500/10 blur-[100px] animate-glow-orbit" />
       </div>
 
       <div className="relative z-10 ">
         {/* Premium card wrapper with animated border */}
         <div className="relative p-[1px] rounded-2xl overflow-hidden">
           {/* Animated gradient border */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-fuchsia-500/30 to-pink-500/30 animate-border-rotate opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-indigo-500/30 to-purple-500/30 animate-border-rotate opacity-60" />
           
-          <SignUp
+          <SignIn
             appearance={{
               baseTheme: dark,
               elements: {
@@ -32,10 +32,10 @@ export default function SignUpPage() {
                 dividerLine: "bg-white/10",
                 dividerText: "text-gray-500",
                 formFieldLabel: "text-gray-300 text-sm font-medium",
-                formFieldInput: "bg-[#020203] border-white/10 text-white rounded-xl focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all",
+                formFieldInput: "bg-[#020203] border-white/10 text-white rounded-xl focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 transition-all",
                 footerActionText: "text-gray-400",
-                footerActionLink: "text-purple-400 hover:text-purple-300 font-semibold",
-                formButtonPrimary: "bg-gradient-to-r from-purple-500 to-pink-600 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all rounded-xl",
+                footerActionLink: "text-cyan-400 hover:text-cyan-300 font-semibold",
+                formButtonPrimary: "bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all rounded-xl",
               },
             }}
           />

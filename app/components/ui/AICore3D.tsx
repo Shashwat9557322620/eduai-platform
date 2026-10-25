@@ -64,7 +64,7 @@ function Core({ isProcessing, color }: AICore3DProps) {
 
 export default function AICore3D({ isProcessing, color }: AICore3DProps) {
   return (
-    <div className={`absolute top-4 right-4 w-40 h-40 pointer-events-none z-50 mix-blend-screen transition-opacity duration-500 ${isProcessing ? 'opacity-100' : 'opacity-40'}`}>
+    <div className={`absolute top-16 right-4 w-40 h-40 pointer-events-none z-0 mix-blend-screen transition-opacity duration-500 ${isProcessing ? 'opacity-100' : 'opacity-30'}`}>
       <Canvas camera={{ position: [0, 0, 4], fov: 50 }} dpr={[1, 2]}>
         <ambientLight intensity={0.5} />
         <Core isProcessing={isProcessing} color={color} />

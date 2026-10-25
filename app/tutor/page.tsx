@@ -4,7 +4,7 @@ import { useUser } from '@clerk/nextjs';
 import Navbar from '../components/Navbar';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Send, Bot, User, Sparkles, BookOpen, Lightbulb, RotateCcw, Copy, Check, Loader2, ChevronDown, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
+import { Send, Bot, User, Sparkles, BookOpen, Lightbulb, RotateCcw, Copy, Check, Loader2, ChevronDown, Paperclip, X, FileText, Image as ImageIcon, Download, Share2, Printer, ChevronRight } from 'lucide-react';
 import AITutorBrainBackground from '../components/backgrounds/AITutorBrainBackground';
 
 // Markdown & Math Rendering
@@ -105,7 +105,7 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-function MessageBubble({ message, onCopy, isNew, isStreaming }: { message: Message; onCopy: (text: string) => void; isNew?: boolean; isStreaming?: boolean }) {
+function MessageBubble({ message, onCopy, onSelect, isSelected, isNew, isStreaming }: { message: Message; onCopy: (text: string) => void; onSelect: (id: string) => void; isSelected: boolean; isNew?: boolean; isStreaming?: boolean }) {
   const [copied, setCopied] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const isUser = message.role === 'user';
@@ -142,54 +142,41 @@ function MessageBubble({ message, onCopy, isNew, isStreaming }: { message: Messa
         {isUser ? <User className="w-4 h-4 text-purple-400" /> : <Bot className="w-4 h-4 text-cyan-400" />}
       </motion.div>
       <div className={`max-w-[85%] group ${isUser ? 'text-right' : ''}`}>
-        <div className={`inline-block rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-          isUser
-            ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/20 text-white'
-            : 'bg-[#0a0a0f] border border-white/[0.06] text-gray-200'
-        }`}>
-          {/* Render files if attached by user */}
-          {message.files && message.files.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2 justify-end">
-              {message.files.map((f, i) => (
-                <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/40 border border-white/10 text-xs text-gray-300">
-                  {f.type.startsWith('image/') ? <ImageIcon className="w-3 h-3 text-cyan-400" /> : <FileText className="w-3 h-3 text-purple-400" />}
-                  <span className="truncate max-w-[120px]">{f.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          <div className="prose prose-invert prose-sm max-w-none break-words">
-            <ReactMarkdown 
-              remarkPlugins={[remarkMath, remarkGfm]}
-              rehypePlugins={[rehypeKatex]}
-              components={{
-                code({node, className, children, ...props}) {
-                  const match = /language-(\w+)/.exec(className || '');
-                  return match ? (
-                    <div className="relative my-4 rounded-xl overflow-hidden border border-white/10 bg-black/40">
-                      <div className="flex items-center justify-between px-4 py-1.5 bg-white/5 border-b border-white/5">
-                        <span className="text-[10px] font-mono text-gray-400 uppercase">{match[1]}</span>
-                      </div>
-                      <div className="p-4 overflow-x-auto">
-                        <code className="text-xs font-mono text-cyan-300" {...props}>
-                          {children}
-                        </code>
-                      </div>
-                    </div>
-                  ) : (
-                    <code className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-xs font-mono text-pink-300" {...props}>
-                      {children}
-                    </code>
-                  )
-                }
-              }}
-            >
+        {isUser ? (
+          <div className="inline-block rounded-2xl px-4 py-3 text-sm leading-relaxed bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/20 text-white">
+            {/* Render files if attached by user */}
+            {message.files && message.files.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2 justify-end">
+                {message.files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/40 border border-white/10 text-xs text-gray-300">
+                    {f.type.startsWith('image/') ? <ImageIcon className="w-3 h-3 text-cyan-400" /> : <FileText className="w-3 h-3 text-purple-400" />}
+                    <span className="truncate max-w-[120px]">{f.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="prose prose-invert prose-sm max-w-none break-words">
               {message.content}
-            </ReactMarkdown>
-            {isStreaming && <span className="inline-block w-1.5 h-4 ml-1 bg-cyan-400 animate-pulse" />}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div 
+            onClick={() => onSelect(message.id)}
+            className={`cursor-pointer inline-flex flex-col rounded-2xl p-1 text-sm leading-relaxed border transition-all duration-300 ${isSelected ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'bg-[#0a0a0f] border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.02]'}`}
+          >
+            <div className="px-4 py-3 flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-cyan-400">
+                <Sparkles className="w-4 h-4" />
+                <span className="font-semibold text-[11px] tracking-widest uppercase">Output Generated</span>
+              </div>
+              <p className="text-gray-400 text-xs">Response ready in Live Workspace.</p>
+            </div>
+            <div className={`border-t flex items-center justify-between px-4 py-2 mt-1 transition-colors duration-300 ${isSelected ? 'border-cyan-500/20 text-cyan-300' : 'border-white/[0.04] text-gray-500 group-hover:text-gray-300'}`}>
+              <span className="text-[10px] font-mono uppercase tracking-wider">{isSelected ? 'Viewing Document' : 'View Document'}</span>
+              <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-300 ${isSelected ? 'translate-x-1' : ''}`} />
+            </div>
+          </div>
+        )}
         <div className={`flex items-center gap-2 mt-1 ${isUser ? 'justify-end' : ''}`}>
           <span className="text-[9px] font-mono text-gray-600">
             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -211,8 +198,10 @@ function MessageBubble({ message, onCopy, isNew, isStreaming }: { message: Messa
 export default function TutorPage() {
   const { user, isSignedIn } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [workspaceCopied, setWorkspaceCopied] = useState(false);
   const [subject, setSubject] = useState('');
   const [showSubjectPicker, setShowSubjectPicker] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -274,6 +263,8 @@ export default function TutorPage() {
     setLoading(true);
 
     const assistantMsgId = (Date.now() + 1).toString();
+    
+    setSelectedMessageId(assistantMsgId);
     
     // Add empty assistant message that we will stream into
     setMessages(prev => [...prev, {
@@ -351,8 +342,43 @@ export default function TutorPage() {
   };
 
   const latestAssistantMessage = messages.slice().reverse().find(m => m.role === 'assistant');
+  const activeMessage = messages.find(m => m.id === selectedMessageId) || latestAssistantMessage;
   const isSplitScreen = messages.length > 0;
   const theme = getSubjectTheme(subject);
+
+  const handleExportTxt = () => {
+    if (!activeMessage) return;
+    const blob = new Blob([activeMessage.content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `EduAI_Workspace_${Date.now()}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPdf = () => {
+    window.print();
+  };
+
+  const handleShare = async () => {
+    if (!activeMessage) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'EduAI Live Workspace',
+          text: activeMessage.content.slice(0, 150) + '...',
+        });
+      } catch (err) {
+        console.log('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(activeMessage.content);
+      alert('Copied to clipboard!');
+    }
+  };
 
   return (
     <ErrorBoundary>
@@ -474,6 +500,8 @@ export default function TutorPage() {
                       key={msg.id}
                       message={msg}
                       onCopy={(text) => navigator.clipboard.writeText(text)}
+                      onSelect={setSelectedMessageId}
+                      isSelected={msg.id === selectedMessageId}
                       isNew={i === messages.length - 1}
                       isStreaming={loading && i === messages.length - 1 && msg.role === 'assistant'}
                     />
@@ -497,16 +525,34 @@ export default function TutorPage() {
             {/* Input Area */}
             <div className="px-6 py-4 border-t border-white/[0.04] bg-[#020203]">
               {attachedFiles.length > 0 && (
-                <div className="flex gap-2 mb-3 px-1 overflow-x-auto">
-                  {attachedFiles.map((file, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-300 shrink-0">
-                      {file.type.startsWith('image/') ? <ImageIcon className="w-3.5 h-3.5 text-cyan-400" /> : <FileText className="w-3.5 h-3.5 text-purple-400" />}
-                      <span className="truncate max-w-[120px]">{file.name}</span>
-                      <button onClick={() => removeFile(i)} className="p-0.5 hover:bg-white/10 rounded-full transition-colors ml-1">
-                        <X className="w-3 h-3 text-gray-400" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="flex gap-3 mb-3 px-1 overflow-x-auto custom-scrollbar pb-2 pt-1">
+                  {attachedFiles.map((file, i) => {
+                    const isImage = file.type.startsWith('image/');
+                    const fileUrl = URL.createObjectURL(file);
+                    return (
+                      <div key={i} className="relative group shrink-0 flex items-center justify-center bg-[#0a0a0f] border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all cursor-pointer h-16 w-16" onClick={() => window.open(fileUrl, '_blank')} title="Click to view file">
+                        {isImage ? (
+                          <img src={fileUrl} alt={file.name} className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                        ) : (
+                          <div className="h-full w-full flex flex-col items-center justify-center bg-white/5 p-2">
+                            <FileText className="w-6 h-6 text-cyan-400 mb-1" />
+                            <span className="text-[9px] font-mono text-gray-400 truncate w-full text-center">{file.name.split('.').pop()?.toUpperCase() || 'FILE'}</span>
+                          </div>
+                        )}
+                        {/* Overlay for filename on hover */}
+                        <div className="absolute inset-x-0 bottom-0 bg-black/80 backdrop-blur-sm p-1 translate-y-full group-hover:translate-y-0 transition-transform">
+                          <p className="text-[8px] text-white truncate text-center font-mono">{file.name}</p>
+                        </div>
+                        {/* Remove button */}
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); removeFile(i); }} 
+                          className="absolute bg-red-500/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 top-1 right-1 transition-all shadow-lg hover:bg-red-500 backdrop-blur-md"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <div className="relative flex items-end gap-2 bg-[#0a0a0f] border border-white/[0.08] rounded-2xl transition-all duration-300 p-2"
@@ -524,7 +570,7 @@ export default function TutorPage() {
                   ref={fileInputRef} 
                   className="hidden" 
                   multiple 
-                  accept="image/*,application/pdf"
+                  accept="image/*,application/pdf,text/plain"
                   onChange={handleFileChange}
                 />
                 <button 
@@ -588,53 +634,81 @@ export default function TutorPage() {
                   </AnimatePresence>
 
                   {/* Header */}
-                  <div className="h-14 border-b border-white/[0.06] flex items-center px-6 shrink-0 z-30 bg-black/40 backdrop-blur-md relative">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-red-500/50" />
-                      <div className="w-2 h-2 rounded-full bg-amber-500/50" />
-                      <div className="w-2 h-2 rounded-full bg-green-500/50" />
+                  <div className="h-14 border-b border-white/[0.06] flex items-center px-6 shrink-0 z-40 bg-black/40 backdrop-blur-md relative justify-between">
+                    <div className="flex items-center gap-2 w-32">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
                     </div>
-                    <div className={`mx-auto flex items-center gap-2 text-xs font-mono tracking-widest transition-colors duration-300 ${loading ? theme.accent + ' animate-pulse' : 'text-gray-400'}`}>
+                    
+                    <div className={`flex items-center justify-center gap-2 text-xs font-mono tracking-widest transition-colors duration-300 ${loading ? theme.accent + ' animate-pulse' : 'text-gray-400'}`}>
                       {loading ? <Sparkles className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5 text-cyan-400" />}
                       {loading ? '⚡ SYNTHESIZING SOLUTION...' : 'LIVE WORKSPACE'}
                     </div>
+
+                    <div className="flex items-center justify-end w-32 gap-1 z-50">
+                      {activeMessage && (
+                        <>
+                          <button onClick={() => {
+                            navigator.clipboard.writeText(activeMessage.content); 
+                            setWorkspaceCopied(true); 
+                            setTimeout(() => setWorkspaceCopied(false), 2000);
+                          }} className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors" title="Copy Text">
+                            {workspaceCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                          <button onClick={handleExportTxt} className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors" title="Export .TXT">
+                            <Download className="w-4 h-4" />
+                          </button>
+                          <button onClick={handleExportPdf} className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors" title="Print / Save PDF">
+                            <Printer className="w-4 h-4" />
+                          </button>
+                          <div className="w-[1px] h-3 bg-white/10 mx-1" />
+                          <button onClick={handleShare} className="p-1.5 rounded-lg text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 transition-colors" title="Share">
+                            <Share2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                     
-                    {/* The 3D AI Core floating in the header */}
+                    {/* The 3D AI Core floating in the background */}
                     <AICore3D isProcessing={loading} color={theme.hex} />
                   </div>
 
-                  {/* Content Area - Renders the latest AI response */}
-                  <div className="flex-1 overflow-y-auto p-8 custom-scrollbar z-10 relative">
-                    {latestAssistantMessage ? (
-                      <div className="prose prose-invert max-w-none 
-                        prose-headings:font-bold prose-headings:tracking-tight 
-                        prose-h1:text-3xl prose-h1:bg-clip-text prose-h1:text-transparent prose-h1:bg-gradient-to-r prose-h1:from-cyan-400 prose-h1:to-purple-400
-                        prose-h2:text-2xl prose-h2:text-cyan-100
-                        prose-h3:text-xl prose-h3:text-purple-200
-                        prose-p:text-gray-300 prose-p:leading-relaxed
-                        prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
-                        prose-strong:text-white prose-strong:font-bold
-                        prose-code:text-pink-300 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
-                        prose-pre:bg-[#0a0a0f] prose-pre:border prose-pre:border-white/10
-                        prose-blockquote:border-l-4 prose-blockquote:border-cyan-500 prose-blockquote:bg-cyan-500/5 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-blockquote:text-cyan-50
-                        math-display
-                      ">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkMath, remarkGfm]}
-                          rehypePlugins={[rehypeKatex]}
-                        >
-                          {latestAssistantMessage.content}
-                        </ReactMarkdown>
-                        {loading && <span className={`inline-block w-2.5 h-[1.1em] ml-1 ${theme.accent} animate-pulse`} style={{ backgroundColor: 'currentColor', verticalAlign: 'text-bottom' }} />}
-                      </div>
-                    ) : (
-                      <div className="h-full flex flex-col items-center justify-center opacity-50">
-                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-                          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                  {/* Content Area - Renders the selected AI response */}
+                  <div className="flex-1 overflow-y-auto custom-scrollbar z-10 relative flex flex-col">
+
+                    <div className="p-8 pt-2">
+                      {activeMessage ? (
+                        <div className="prose prose-invert max-w-none 
+                          prose-headings:font-bold prose-headings:tracking-tight 
+                          prose-h1:text-3xl prose-h1:bg-clip-text prose-h1:text-transparent prose-h1:bg-gradient-to-r prose-h1:from-cyan-400 prose-h1:to-purple-400
+                          prose-h2:text-2xl prose-h2:text-cyan-100
+                          prose-h3:text-xl prose-h3:text-purple-200
+                          prose-p:text-gray-300 prose-p:leading-relaxed
+                          prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
+                          prose-strong:text-white prose-strong:font-bold
+                          prose-code:text-pink-300 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
+                          prose-pre:bg-[#0a0a0f] prose-pre:border prose-pre:border-white/10
+                          prose-blockquote:border-l-4 prose-blockquote:border-cyan-500 prose-blockquote:bg-cyan-500/5 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-blockquote:text-cyan-50
+                          math-display
+                        ">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkMath, remarkGfm]}
+                            rehypePlugins={[rehypeKatex]}
+                          >
+                            {activeMessage.content}
+                          </ReactMarkdown>
+                          {loading && activeMessage.id === latestAssistantMessage?.id && <span className={`inline-block w-2.5 h-[1.1em] ml-1 ${theme.accent} animate-pulse`} style={{ backgroundColor: 'currentColor', verticalAlign: 'text-bottom' }} />}
                         </div>
-                        <p className="text-sm font-mono text-gray-400">Waiting for AI synthesis...</p>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="h-[50vh] flex flex-col items-center justify-center opacity-50">
+                          <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
+                            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                          </div>
+                          <p className="text-sm font-mono text-gray-400">Waiting for AI synthesis...</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -650,6 +724,14 @@ export default function TutorPage() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
         .math-display .katex-display { margin: 2rem 0; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; }
         .math-display .katex { font-size: 1.1em; color: #e2e8f0; }
+        
+        @media print {
+          body { background: white !important; color: black !important; }
+          nav, .md\\:w-\\[45\\%\\], .sticky, button { display: none !important; }
+          .md\\:flex.flex-col.w-\\[55\\%\\] { width: 100% !important; display: block !important; padding: 0 !important; }
+          .h-full.w-full.rounded-3xl { border: none !important; background: none !important; box-shadow: none !important; }
+          .prose-invert { filter: invert(1) hue-rotate(180deg); }
+        }
       `}} />
     </ErrorBoundary>
   );

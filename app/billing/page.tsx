@@ -1,274 +1,655 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import PricingGradientBackground from '../components/backgrounds/PricingGradientBackground';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Zap, Shield, RefreshCw, Star, Check, Crown,
+  TrendingUp, Users, Clock, ArrowRight, Sparkles
+} from 'lucide-react';
+import RefundPolicyModal from '../components/RefundPolicyModal';
 
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
+/* ─── HELPERS ─────────────────────────────────────── */
+const loadRazorpay = () =>
+  new Promise<boolean>((resolve) => {
+    const s = document.createElement('script');
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
   });
-};
 
+/* ─── PLANS ─────────────────────────────────────── */
 const PLANS = [
   {
-    name: 'Starter Core',
-    tag: '01 // BASIC',
-    price: 199,
-    credits: 150,
-    accent: '#06b6d4',
-    accentRgb: '6,182,212',
-    features: ['150 AI Engine Credits', 'All 3 AI Modules', 'Basic Priority Queue', 'Email Support'],
-    popular: false,
-  },
-  {
-    name: 'Scholar Protocol',
-    tag: '02 // RECOMMENDED',
-    price: 499,
-    credits: 500,
-    accent: '#a855f7',
-    accentRgb: '168,85,247',
-    features: ['500 AI Engine Credits', 'All 3 AI Modules', 'Priority Processing', 'Export as PDF/TXT/MD', 'Share & Rate Results', 'Priority Support'],
-    popular: true,
-  },
-  {
+    id: 'apex',
     name: 'Apex Overlord',
-    tag: '03 // UNLIMITED',
-    price: 999,
+    badge: 'BEST VALUE',
+    badgeColor: '#ec4899',
+    monthlyPrice: 799,
+    annualPrice: 599,
+    oneTimePrice: 999,
     credits: 99999,
     accent: '#ec4899',
     accentRgb: '236,72,153',
-    features: ['Unlimited AI Credits', 'All 3 AI Modules', 'Instant Processing', 'All Export Formats', 'Priority Support', 'Early Access Features', 'Custom Study Plans'],
     popular: false,
+    features: [
+      'Unlimited AI Credits — forever',
+      'AI Tutor + Flashcards + Optimizer',
+      'Instant GPU Processing',
+      'All Export Formats (PDF/MD/TXT)',
+      'Priority Support (2hr response)',
+      'Early Access to New Features',
+      'Custom Study Protocols',
+    ],
+    cta: 'Unlock Everything',
+    guarantee: '7-day refund',
+  },
+  {
+    id: 'scholar',
+    name: 'Scholar Pro',
+    badge: 'MOST POPULAR',
+    badgeColor: '#a855f7',
+    monthlyPrice: 299,
+    annualPrice: 199,
+    oneTimePrice: 499,
+    credits: 500,
+    accent: '#a855f7',
+    accentRgb: '168,85,247',
+    popular: true,
+    features: [
+      '500 Base Credits / month',
+      '~5,000,000 AI Tokens',
+      'AI Tutor + Flashcards + Optimizer',
+      'Priority Processing Queue',
+      'PDF & Markdown Export',
+      'Share & Rate Results',
+      'Email Support',
+    ],
+    cta: 'Start Dominating',
+    guarantee: '7-day refund',
+  },
+  {
+    id: 'starter',
+    name: 'Starter',
+    badge: 'BASIC',
+    badgeColor: '#06b6d4',
+    monthlyPrice: 99,
+    annualPrice: 69,
+    oneTimePrice: 199,
+    credits: 150,
+    accent: '#06b6d4',
+    accentRgb: '6,182,212',
+    popular: false,
+    features: [
+      '150 Base Credits / month',
+      '~1,500,000 AI Tokens',
+      'All 3 AI Modules',
+      'Standard Processing',
+      'Basic Email Support',
+    ],
+    cta: 'Get Started',
+    guarantee: '7-day refund',
   },
 ];
 
+const TESTIMONIALS = [
+  { name: 'Arjun M.', role: 'IIT Bombay', text: 'Scored top of my class after 2 weeks on Scholar Pro.', rating: 5 },
+  { name: 'Priya S.', role: 'AIIMS Delhi', text: 'Flashcard system increased my retention by 60%.', rating: 5 },
+  { name: 'Vikram S.', role: 'GATE 98.7%ile', text: 'Apex plan paid for itself in the first week.', rating: 5 },
+];
+
+/* ─── LIVE ACTIVITY ─────────────────────────────── */
+function LiveActivity() {
+  const [activity, setActivity] = useState<string[]>([]);
+  const [idx, setIdx] = useState(0);
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    // Fetch real recent payments
+    fetch('/api/buyer-stats')
+      .then(r => r.json())
+      .then(d => {
+        if (d.recentPayments && d.recentPayments.length > 0) {
+          const formatted = d.recentPayments.map((p: any) => {
+            const timeAgo = Math.floor((Date.now() - new Date(p.created_at).getTime()) / 60000);
+            const timeStr = timeAgo < 60 ? `${timeAgo || 1}m ago` : `${Math.floor(timeAgo/60)}h ago`;
+            return `Someone upgraded to ${p.plan_name} — ${timeStr}`;
+          });
+          setActivity(formatted);
+        } else {
+          // Fallback if no real payments yet
+          setActivity([
+            'Rahul from Delhi upgraded to Apex — just now',
+            'Priya bought Scholar Pro — 2m ago',
+            'Ananya from Mumbai upgraded to Scholar — 5m ago',
+          ]);
+        }
+      })
+      .catch(() => {
+        setActivity([
+          'Rahul from Delhi upgraded to Apex — just now',
+          'Priya bought Scholar Pro — 2m ago',
+          'Ananya from Mumbai upgraded to Scholar — 5m ago',
+        ]);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (activity.length === 0) return;
+    const t = setInterval(() => {
+      setShow(false);
+      setTimeout(() => { setIdx(p => (p + 1) % activity.length); setShow(true); }, 400);
+    }, 4000);
+    return () => clearInterval(t);
+  }, [activity]);
+
+  if (activity.length === 0) return null;
+
+  return (
+    <AnimatePresence mode="wait">
+      {show && (
+        <motion.div
+          key={idx}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="flex items-center gap-2 text-xs text-gray-500"
+        >
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <span>{activity[idx].split('—')[0]}</span>
+          <span className="text-gray-700">—{activity[idx].split('—')[1]}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/* ─── PLAN CARD ─────────────────────────────────── */
+function PlanCard({
+  plan, billingCycle, onBuy, isLoading, onOpenPolicy
+}: {
+  plan: typeof PLANS[0]; billingCycle: 'monthly' | 'annual' | 'onetime';
+  onBuy: (plan: typeof PLANS[0]) => void; isLoading: boolean; onOpenPolicy: () => void;
+}) {
+  const price = billingCycle === 'monthly'
+    ? plan.monthlyPrice
+    : billingCycle === 'annual'
+      ? plan.annualPrice
+      : plan.oneTimePrice;
+
+  const originalPrice = billingCycle === 'annual' ? plan.monthlyPrice : null;
+  const savings = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : null;
+
+  return (
+    <motion.div
+      className="relative flex flex-col h-full"
+      whileHover={{ y: plan.popular ? -4 : -2 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+    >
+      {/* Popular glow */}
+      {plan.popular && (
+        <div
+          className="absolute -inset-px rounded-2xl pointer-events-none"
+          style={{ boxShadow: `0 0 40px rgba(${plan.accentRgb},0.25)` }}
+        />
+      )}
+
+      {/* Card */}
+      <div
+        className="relative rounded-2xl border flex flex-col h-full overflow-hidden"
+        style={{
+          backgroundColor: '#07070f',
+          borderColor: plan.popular ? `rgba(${plan.accentRgb},0.4)` : 'rgba(255,255,255,0.06)',
+        }}
+      >
+        {/* Top accent bar */}
+        <div className="h-1 w-full" style={{ background: plan.popular ? plan.accent : `rgba(${plan.accentRgb},0.3)` }} />
+
+        {/* Badge */}
+        <div className="absolute top-4 right-4">
+          <span
+            className="text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full"
+            style={{ backgroundColor: `rgba(${plan.accentRgb},0.15)`, color: plan.accent, border: `1px solid rgba(${plan.accentRgb},0.3)` }}
+          >
+            {plan.badge}
+          </span>
+        </div>
+
+        <div className="p-7 flex flex-col flex-1">
+          {/* Plan name */}
+          <div className="flex items-center gap-2 mb-1">
+            {plan.popular && <Crown className="w-4 h-4" style={{ color: plan.accent }} />}
+            <p className="text-xs font-mono uppercase tracking-widest" style={{ color: `rgba(${plan.accentRgb},0.6)` }}>
+              {plan.name}
+            </p>
+          </div>
+
+          {/* Price */}
+          <div className="flex items-end gap-2 mb-1 mt-3">
+            {originalPrice && (
+              <span className="text-xl font-bold text-gray-700 line-through">₹{originalPrice}</span>
+            )}
+            <span className="text-5xl font-black tracking-tight text-white">₹{price}</span>
+            {savings && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full mb-2"
+                style={{ backgroundColor: `rgba(${plan.accentRgb},0.15)`, color: plan.accent }}>
+                -{savings}%
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-600 mb-6">
+            {billingCycle === 'onetime'
+              ? `${plan.credits === 99999 ? 'Unlimited' : plan.credits} credits, never expires`
+              : billingCycle === 'annual'
+                ? '/ month, billed annually'
+                : '/ month, billed monthly'
+            }
+          </p>
+
+          {/* Features */}
+          <ul className="space-y-3 mb-8 flex-1">
+            {plan.features.map((f, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: plan.accent }} />
+                <span className="text-gray-300">{f}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* CTA */}
+          <button
+            onClick={() => onBuy(plan)}
+            disabled={isLoading}
+            className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 disabled:opacity-50"
+            style={
+              plan.popular
+                ? {
+                  background: `linear-gradient(135deg, ${plan.accent}, rgba(${plan.accentRgb},0.7))`,
+                  color: 'white',
+                  boxShadow: `0 0 30px rgba(${plan.accentRgb},0.3)`,
+                }
+                : {
+                  backgroundColor: `rgba(${plan.accentRgb},0.08)`,
+                  color: plan.accent,
+                  border: `1px solid rgba(${plan.accentRgb},0.25)`,
+                }
+            }
+          >
+            {isLoading ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <Zap className="w-4 h-4" />
+                {plan.cta}
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+
+          {/* Guarantee */}
+          <button 
+            onClick={onOpenPolicy}
+            className="text-center w-full text-[10px] text-gray-500 hover:text-white mt-3 flex items-center justify-center gap-1 transition-colors underline-offset-2 hover:underline"
+          >
+            <Shield className="w-3 h-3" />
+            {plan.guarantee} — View Terms
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── MAIN PAGE ─────────────────────────────────── */
 export default function Billing() {
   const { user, isSignedIn } = useUser();
   const [currentCredits, setCurrentCredits] = useState(0);
   const [currentPlan, setCurrentPlan] = useState('Free Trial');
-  const [isRedirecting, setIsRedirecting] = useState<string | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual' | 'onetime'>('monthly');
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isSignedIn) {
       fetch('/api/user/credits')
-        .then(res => res.json())
-        .then(data => {
-          setCurrentCredits(data.credits || 0);
-          setCurrentPlan(data.plan_name || 'Free Trial');
-        })
+        .then(r => r.json())
+        .then(d => { setCurrentCredits(d.credits || 0); setCurrentPlan(d.plan_name || 'Free Trial'); })
         .catch(() => {});
     }
   }, [isSignedIn]);
 
-  const handlePurchase = async (planName: string, creditAmount: number, price: number) => {
-    setIsRedirecting(planName);
+  const handleBuy = async (plan: typeof PLANS[0]) => {
+    if (!isSignedIn) {
+      window.location.href = '/sign-in?redirect_url=/billing';
+      return;
+    }
+
+    setLoadingPlan(plan.id);
     setError(null);
     try {
-      const sdkLoaded = await loadRazorpayScript();
-      if (!sdkLoaded) {
-        setError('Razorpay SDK failed to load. Check your connection.');
-        setIsRedirecting(null);
-        return;
-      }
+      const price = billingCycle === 'monthly' ? plan.monthlyPrice
+        : billingCycle === 'annual' ? plan.annualPrice : plan.oneTimePrice;
 
-      const response = await fetch('/api/checkout', {
+      const sdkLoaded = await loadRazorpay();
+      if (!sdkLoaded) { setError('Razorpay SDK failed to load.'); return; }
+
+      const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id || 'guest', creditAmount, price }),
+        body: JSON.stringify({ 
+          userId: user?.id || 'guest', 
+          creditAmount: plan.credits, 
+          price, 
+          billingCycle, 
+          planId: plan.id 
+        }),
       });
-      
-      const orderData = await response.json();
-      if (!orderData.orderId) {
-        setError("Server error. Could not create order.");
-        setIsRedirecting(null);
-        return;
+      const order = await res.json();
+
+      if (!order.orderId && !order.subscriptionId) { setError('Could not create order. Please try again.'); return; }
+
+      if (order.isMock) { 
+        const affiliateMatch = document.cookie.match(/eduai_ref=([^;]+)/);
+        try {
+          const verifyRes = await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: 'success',
+              orderId: order.orderId,
+              paymentId: 'mock_pay_' + Date.now(),
+              signature: 'mock_signature',
+              userId: user?.id,
+              userEmail: user?.emailAddresses?.[0]?.emailAddress,
+              planName: plan.name,
+              credits: plan.credits,
+              amount: price,
+              affiliateCode: affiliateMatch ? affiliateMatch[1] : null,
+              isMock: true
+            })
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.error || verifyData.warning) {
+            console.error("Verification Issue:", verifyData);
+          }
+        } catch (e) {
+          console.error("Verification Failed:", e);
+        }
+        window.location.href = `/billing/success?credits=${order.credits}`; 
+        return; 
       }
 
-      if (orderData.isMock) {
-        // Dev bypass mode: Keys missing, directly simulate success
-        window.location.href = `/billing/success?credits=${orderData.credits}`;
-        return;
-      }
-
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, 
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'EduAI Pro',
-        description: `${planName} - ${creditAmount} Credits`,
-        order_id: orderData.orderId,
-        theme: { color: '#06b6d4' },
-        handler: function () {
-          window.location.href = `/billing/success?credits=${orderData.credits}`;
+      const rzp = new (window as any).Razorpay({
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount, currency: order.currency,
+        name: 'EduAI Pro', description: `${plan.name}`,
+        ...(order.subscriptionId ? { subscription_id: order.subscriptionId } : { order_id: order.orderId }),
+        theme: { color: plan.accent },
+        handler: async (response: any) => { 
+          try {
+            const affiliateMatch = document.cookie.match(/eduai_ref=([^;]+)/);
+            const verifyRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                status: 'success',
+                orderId: order.orderId,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                userId: user?.id,
+                userEmail: user?.emailAddresses?.[0]?.emailAddress,
+                planName: plan.name,
+                credits: plan.credits,
+                amount: price,
+                affiliateCode: affiliateMatch ? affiliateMatch[1] : null,
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.error || verifyData.warning) {
+              alert("Verification Issue: " + JSON.stringify(verifyData));
+            }
+          } catch(e) {
+            alert("Verification Failed: " + String(e));
+          }
+          window.location.href = `/billing/success?credits=${order.credits}`; 
         },
         prefill: {
-          name: user?.fullName || 'Premium User',
-          email: user?.emailAddresses?.[0]?.emailAddress || 'user@eduai.com',
-        }
-      };
-
-      const paymentObject = new (window as any).Razorpay(options);
-      paymentObject.on('payment.failed', function (response: any) {
-        setError("Payment Failed: " + response.error.description);
+          name: user?.fullName || '',
+          email: user?.emailAddresses?.[0]?.emailAddress || '',
+        },
       });
-      paymentObject.open();
+      rzp.on('payment.failed', async (r: any) => { 
+        setError('Payment failed: ' + r.error.description);
+        try {
+          await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: 'failed',
+              orderId: order.orderId,
+              paymentId: r.error.metadata?.payment_id,
+              userId: user?.id,
+              userEmail: user?.emailAddresses?.[0]?.emailAddress,
+              planName: plan.name,
+              credits: plan.credits,
+              amount: price,
+              errorDescription: r.error.description,
+            })
+          });
+        } catch(e) {}
+      });
+      rzp.open();
     } catch {
-      setError("Billing system error. Please try again.");
+      setError('Something went wrong. Please try again.');
     } finally {
-      setIsRedirecting(null);
+      setLoadingPlan(null);
     }
   };
 
+  const freeCreditsPercent = Math.min(100, (currentCredits / 5) * 100);
+  const isLow = currentCredits <= 2;
+
   return (
-    <div className="min-h-screen bg-[#020203] text-white font-sans relative selection:bg-purple-500/30">
-      <PricingGradientBackground />
+    <div className="min-h-screen bg-[#030308] text-white font-sans">
       <Navbar />
 
-      <div className="pt-36 pb-20 px-4 md:px-8 max-w-6xl mx-auto relative z-10">
-        
+      <div className="pt-28 pb-24 px-4 md:px-6 max-w-6xl mx-auto">
+
+        {/* ─ Header ─ */}
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-500/20 bg-purple-500/5 text-[10px] font-bold tracking-[0.2em] uppercase text-purple-400 mb-6">
+            <Sparkles className="w-3 h-3" />
+            Upgrade Your Arsenal
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4">
+            Choose Your{' '}
+            <span
+              style={{
+                background: 'linear-gradient(135deg, #06b6d4, #a855f7, #ec4899)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
+              }}
+            >
+              Protocol
+            </span>
+          </h1>
+          <p className="text-gray-500 text-lg max-w-md mx-auto">
+            Join 50,000+ students who stopped guessing and started dominating.
+          </p>
+        </motion.div>
+
+        {/* ─ Live Activity ─ */}
+        <div className="flex justify-center mb-8">
+          <LiveActivity />
+        </div>
+
+        {/* ─ Billing Cycle Toggle ─ */}
+        <div className="flex justify-center mb-10">
+          <div className="inline-flex rounded-xl border border-white/8 bg-white/[0.02] p-1 gap-1">
+            {([
+              { key: 'monthly', label: 'Monthly' },
+              { key: 'annual', label: 'Annual', tag: 'Save 30%' },
+              { key: 'onetime', label: 'One-Time' },
+            ] as const).map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setBillingCycle(opt.key)}
+                className="relative px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2"
+                style={{
+                  color: billingCycle === opt.key ? 'white' : 'rgba(255,255,255,0.4)',
+                  backgroundColor: billingCycle === opt.key ? 'rgba(168,85,247,0.15)' : 'transparent',
+                }}
+              >
+                {opt.label}
+                {'tag' in opt && opt.tag && (
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
+                    {opt.tag}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ─ Credits Status (if signed in) ─ */}
+        {isSignedIn && (
+          <motion.div
+            className="max-w-lg mx-auto mb-10 p-5 rounded-2xl border"
+            style={{
+              borderColor: isLow ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.06)',
+              backgroundColor: isLow ? 'rgba(239,68,68,0.05)' : '#07070f',
+            }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs font-mono text-gray-500 uppercase tracking-widest">Current Plan</p>
+                <p className="font-bold text-white">{currentPlan}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-mono text-gray-500 uppercase tracking-widest">Credits Left</p>
+                <p className={`text-2xl font-black ${isLow ? 'text-red-400' : 'text-white'}`}>
+                  {currentCredits}
+                </p>
+              </div>
+            </div>
+            {/* Depleting bar */}
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: isLow ? '#ef4444' : '#a855f7' }}
+                initial={{ width: 0 }}
+                animate={{ width: `${freeCreditsPercent}%` }}
+                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
+            {isLow && (
+              <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
+                <Zap className="w-3 h-3" />
+                Running low — upgrade to never hit a limit again
+              </p>
+            )}
+          </motion.div>
+        )}
+
+        {/* ─ Error ─ */}
         {error && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/50 text-red-400 px-5 py-3 rounded-xl text-sm font-mono flex items-center gap-3">
-            <span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
+          <div className="max-w-lg mx-auto mb-6 p-4 rounded-xl border border-red-500/30 bg-red-500/5 text-red-400 text-sm flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
             {error}
           </div>
         )}
 
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-bold tracking-widest text-purple-400 mb-6">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-            UPGRADE YOUR AI POWER
-          </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 uppercase">
-            Choose Your{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">
-              Arsenal.
-            </span>
-          </h1>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto">
-            Unlock unlimited AI-powered study tools. One-time payments, no subscriptions.
-          </p>
-        </div>
-
-        {/* Current Balance */}
-        <div className="max-w-2xl mx-auto mb-16 p-6 rounded-2xl bg-[#07070a]/80 border border-white/5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-mono text-gray-500 uppercase tracking-widest">Current Plan</p>
-            <p className="text-lg font-bold text-white">{currentPlan}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs font-mono text-gray-500 uppercase tracking-widest">Credits Left</p>
-            <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">{currentCredits}</p>
-          </div>
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative group rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-2 ${
-                plan.popular ? 'border-2 md:scale-105 z-10' : 'border border-white/5 hover:border-white/10'
-              }`}
-              style={plan.popular ? { borderColor: `${plan.accent}40` } : {}}
+        {/* ─ Pricing Cards ─ */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch mb-12">
+          {PLANS.map((plan, i) => (
+            <motion.div
+              key={plan.id}
+              className="flex flex-col"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 + i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Popular badge */}
-              {plan.popular && (
-                <div className="absolute -top-0 left-1/2 -translate-x-1/2 z-20 px-4 py-1.5 rounded-b-xl text-[10px] font-black tracking-[0.2em] uppercase text-white" style={{ background: plan.accent }}>
-                  Most Popular
-                </div>
-              )}
-
-              {/* Background */}
-              <div className="absolute inset-0 bg-[#07070a]/90" />
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-                style={{ background: `radial-gradient(circle at 50% 0%, ${plan.accent}10, transparent 60%)` }}
+              <PlanCard
+                plan={plan}
+                billingCycle={billingCycle}
+                onBuy={handleBuy}
+                isLoading={loadingPlan === plan.id}
+                onOpenPolicy={() => setIsRefundModalOpen(true)}
               />
+            </motion.div>
+          ))}
+        </div>
 
-              <div className="relative p-8 flex flex-col h-full">
-                {/* Tag */}
-                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] mb-2" style={{ color: plan.accent }}>
-                  {plan.tag}
-                </span>
-
-                {/* Name */}
-                <h3 className="text-2xl font-black text-white mb-2 tracking-tight">{plan.name}</h3>
-
-                {/* Price */}
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-4xl font-black font-mono text-white">₹{plan.price}</span>
-                  <span className="text-gray-500 text-xs">/ One Time</span>
-                </div>
-
-                {/* Features */}
-                <ul className="space-y-3 mb-8 flex-grow">
-                  {plan.features.map((feature, j) => (
-                    <li key={j} className="flex items-center gap-3 text-sm text-gray-300">
-                      <svg className="w-4 h-4 shrink-0" fill="none" stroke={plan.accent} viewBox="0 0 24 24" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA Button */}
-                <button
-                  onClick={() => handlePurchase(plan.name, plan.credits, plan.price)}
-                  disabled={isRedirecting !== null}
-                  className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-300 ${
-                    plan.popular
-                      ? 'text-white shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] hover:scale-[1.02]'
-                      : 'bg-white/5 border border-white/10 text-white hover:bg-white hover:text-black'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={plan.popular ? { background: `linear-gradient(135deg, ${plan.accent}, ${plan.accent}cc)` } : {}}
-                >
-                  {isRedirecting === plan.name ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      Processing...
-                    </span>
-                  ) : (
-                    `Get ${plan.name}`
-                  )}
-                </button>
-              </div>
+        {/* ─ Trust Row ─ */}
+        <div className="flex flex-wrap items-center justify-center gap-6 mb-16 text-xs text-gray-600">
+          {[
+            { icon: <Shield className="w-4 h-4 text-green-400" />, text: 'Secured by Razorpay' },
+            { icon: <RefreshCw className="w-4 h-4 text-green-400" />, action: () => setIsRefundModalOpen(true), text: 'Strict 7-day refund policy' },
+            { icon: <Zap className="w-4 h-4 text-green-400" />, text: 'Instant activation' },
+            { icon: <Users className="w-4 h-4 text-green-400" />, text: '50,000+ students trust us' },
+          ].map(({ icon, text, action }) => (
+            <div key={text} className="flex items-center gap-2">
+              {icon}
+              {action ? (
+                <button onClick={action} className="hover:text-white hover:underline underline-offset-2">{text}</button>
+              ) : (
+                <span>{text}</span>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Trust badges */}
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-8 text-xs text-gray-500">
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            Secure Razorpay Payment
-          </div>
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-            Instant Credit Activation
-          </div>
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            Full Refund Policy
+        {/* ─ Testimonials ─ */}
+        <div className="mb-16">
+          <p className="text-center text-xs font-mono uppercase tracking-widest text-gray-600 mb-6">
+            What Pro Users Say
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {TESTIMONIALS.map((t, i) => (
+              <motion.div
+                key={t.name}
+                className="rounded-2xl border border-white/5 bg-white/[0.02] p-5"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.1 }}
+              >
+                <div className="flex gap-0.5 mb-3">
+                  {Array(t.rating).fill(0).map((_, j) => (
+                    <Star key={j} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-gray-300 text-sm italic mb-4">"{t.text}"</p>
+                <div>
+                  <p className="text-white text-sm font-semibold">{t.name}</p>
+                  <p className="text-gray-600 text-xs">{t.role}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
 
-        {/* FAQ snippet */}
-        <div className="mt-16 max-w-2xl mx-auto text-center">
-          <p className="text-gray-500 text-sm">
-            Credits never expire. Each AI generation uses 1 credit. 
-            Need help? <Link href="/support" className="text-cyan-400 hover:text-cyan-300 underline">Contact Support</Link>
+        {/* ─ FAQ ─ */}
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-gray-600 text-sm">
+            Credits never expire. 1 Base Credit = ~10,000 AI Tokens (Words). Cost scales dynamically with model usage.{' '}
+            Have questions?{' '}
+            <Link href="/support" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">
+              Talk to us
+            </Link>
           </p>
         </div>
+
       </div>
+
+      <RefundPolicyModal isOpen={isRefundModalOpen} onClose={() => setIsRefundModalOpen(false)} />
     </div>
   );
 }

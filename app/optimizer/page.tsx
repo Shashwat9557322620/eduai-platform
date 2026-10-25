@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import { supabase } from '../../lib/supabaseClient';
 import { useUser } from '@clerk/nextjs';
@@ -8,6 +8,8 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import ShareButton from '../components/ShareButton';
 import CopyFullContent from '../components/CopyFullContent';
 import RatingWidget from '../components/RatingWidget';
+import AdvancedImportButton from '../components/AdvancedImportButton';
+import { Paperclip, FileText, Image as ImageIcon, X } from 'lucide-react';
 
 // Types
 interface TimetableSlot {
@@ -33,7 +35,9 @@ export default function Optimizer() {
   const [completedDays, setCompletedDays] = useState<Set<number>>(new Set());
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const [typingText, setTypingText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   const toggleComplete = (day: number) => {
     setCompletedDays(prev => {
@@ -45,6 +49,28 @@ export default function Optimizer() {
 
   const toggleExpand = (day: number) => {
     setExpandedDay(expandedDay === day ? null : day);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setAttachedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = error => reject(error);
+    });
   };
 
   // Typing animation for loading state
@@ -82,8 +108,8 @@ export default function Optimizer() {
   }, [isGenerating]);
 
   const handleGenerate = async () => {
-    if (!syllabus.trim() || !days) {
-      setError("SYSTEM ALERT: Please input both Syllabus and Target Days.");
+    if ((!syllabus.trim() && attachedFiles.length === 0) || !days) {
+      setError("SYSTEM ALERT: Please input Syllabus/Images and Target Days.");
       return;
     }
 
@@ -92,10 +118,29 @@ export default function Optimizer() {
     setProtocol([]);
 
     try {
+      const images: {mimeType: string, data: string}[] = [];
+      let extraText = "";
+
+      for (const file of attachedFiles) {
+        if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+          const b64 = await fileToBase64(file);
+          images.push({ mimeType: file.type, data: b64 });
+        } else if (file.type === 'text/plain') {
+          const fileText = await file.text();
+          extraText += "\n\n" + fileText;
+        }
+      }
+
+      const finalText = syllabus + extraText;
+      const userApiKey = localStorage.getItem('gemini_api_key');
+
       const response = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ syllabus, days, userId: user?.id }),
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(userApiKey ? { 'x-user-gemini-key': userApiKey } : {})
+        },
+        body: JSON.stringify({ syllabus: finalText, days, images, userId: user?.id }),
       });
 
       const data = await response.json();
@@ -109,7 +154,7 @@ export default function Optimizer() {
 
       const { error: dbError } = await supabase
         .from('study_plans')
-        .insert([{ syllabus, days, plan: JSON.stringify(planData) }]);
+        .insert([{ syllabus: finalText, days, plan: JSON.stringify(planData) }]);
 
       if (dbError) console.error("Supabase Save Error:", dbError);
 
@@ -125,7 +170,7 @@ export default function Optimizer() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-[#020203] text-white font-sans relative overflow-x-hidden selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020203] text-white font-sans relative overflow-x-hidden selection:bg-cyan-500/30 pb-32">
 
       <LearningPathRoadmapBackground />
 
@@ -151,90 +196,108 @@ export default function Optimizer() {
         </div>
 
         {/* Input Terminal */}
-        <div className="relative group max-w-5xl mx-auto mb-16">
-          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600/30 via-blue-600/30 to-cyan-600/30 rounded-3xl blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
-          <div className="relative bg-[#07070a]/95 backdrop-blur-2xl rounded-[2rem] p-8 border border-white/5 flex flex-col gap-6">
+        <div className="relative group max-w-4xl mx-auto mb-16 w-full">
+          <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-600/30 to-blue-600/30 rounded-3xl blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
+          <div className="bg-[#0a0a0c]/90 backdrop-blur-3xl rounded-[2rem] p-8 border border-white/[0.05] relative shadow-2xl">
 
             {/* Fake Terminal Header */}
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/5 pb-4 mb-6 gap-4">
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
               </div>
-              <span className="text-xs font-mono text-cyan-400/70 tracking-widest">curriculum_engine.py</span>
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                <span className="text-xs font-mono text-cyan-400/70 tracking-widest hidden sm:inline-block">curriculum_engine.py</span>
+                
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 bg-cyan-500/5 px-3 py-1.5 rounded-lg border border-cyan-500/20">
+                    <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Days:</span>
+                    <input 
+                      type="number" 
+                      value={days} 
+                      onChange={(e) => setDays(e.target.value)} 
+                      className="w-12 bg-transparent border-none outline-none text-white font-bold text-center text-sm focus:outline-none" 
+                      placeholder="30"
+                      min="1"
+                      max="365"
+                    />
+                  </div>
+
+                  <AdvancedImportButton onFileChange={handleFileChange} />
+                </div>
+              </div>
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm font-mono flex items-center gap-3 animate-pulse">
+              <div className="mb-4 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm font-mono flex items-center gap-3 animate-pulse">
                 <span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
                 {error}
               </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="flex-grow space-y-2">
-                <label className="flex items-center gap-2 text-xs font-mono text-gray-400 mb-3 uppercase tracking-widest font-bold">
-                  <span className="text-cyan-400">01 //</span> Raw Syllabus Input
-                </label>
-                <textarea
-                  value={syllabus}
-                  onChange={(e) => setSyllabus(e.target.value)}
-                  placeholder="Paste your syllabus here... The more detail, the better the protocol."
-                  className="w-full h-40 bg-white/[0.03] border border-white/10 rounded-2xl p-5 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 focus:bg-cyan-500/5 focus:shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-all font-medium text-base resize-none custom-scrollbar"
-                />
+            {attachedFiles.length > 0 && (
+              <div className="flex gap-3 mb-4 px-1 overflow-x-auto custom-scrollbar pb-2">
+                {attachedFiles.map((file, i) => {
+                  const isImage = file.type.startsWith('image/');
+                  const fileUrl = URL.createObjectURL(file);
+                  return (
+                    <div key={i} className="relative group shrink-0 flex items-center justify-center bg-[#0a0a0f] border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all cursor-pointer h-16 w-16" onClick={() => window.open(fileUrl, '_blank')} title="Click to view file">
+                      {isImage ? (
+                        <img src={fileUrl} alt={file.name} className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                      ) : (
+                        <div className="h-full w-full flex flex-col items-center justify-center bg-white/5 p-2">
+                          <FileText className="w-6 h-6 text-cyan-400 mb-1" />
+                          <span className="text-[9px] font-mono text-gray-400 truncate w-full text-center">{file.name.split('.').pop()?.toUpperCase() || 'FILE'}</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-black/80 backdrop-blur-sm p-1 translate-y-full group-hover:translate-y-0 transition-transform">
+                        <p className="text-[8px] text-white truncate text-center font-mono">{file.name}</p>
+                      </div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); removeFile(i); }} 
+                        className="absolute bg-red-500/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 top-1 right-1 transition-all shadow-lg hover:bg-red-500 backdrop-blur-md"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
+            )}
 
-              <div className="lg:w-72 flex flex-col gap-4">
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-xs font-mono text-gray-400 mb-3 uppercase tracking-widest font-bold">
-                    <span className="text-blue-400">02 //</span> Target Days
-                  </label>
-                  <input
-                    type="number"
-                    value={days}
-                    onChange={(e) => setDays(e.target.value)}
-                    placeholder="e.g. 30"
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-blue-500/5 focus:shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all font-medium text-base"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-xs font-mono text-gray-400 mb-3 uppercase tracking-widest font-bold">
-                    <span className="text-gray-400">03 //</span> Import Data
-                  </label>
-                  <label className="flex items-center justify-center gap-3 w-full bg-white/[0.03] hover:bg-white/[0.06] border border-dashed border-white/10 hover:border-cyan-500/50 rounded-2xl px-5 py-4 text-gray-300 hover:text-cyan-400 cursor-pointer transition-all duration-300">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    <span className="text-sm font-semibold">Upload PDF/IMG</span>
-                    <input type="file" className="hidden" accept=".pdf,image/*" onChange={() => alert("File upload connected!")} />
-                  </label>
-                </div>
-              </div>
-            </div>
+            <textarea 
+              value={syllabus}
+              onChange={(e) => setSyllabus(e.target.value)}
+              className="w-full h-[200px] bg-transparent text-gray-100 placeholder:text-gray-600 focus:outline-none resize-none overflow-y-auto custom-scrollbar text-xl leading-relaxed" 
+              placeholder="Paste your raw syllabus here... Physics, Math, DSA... The engine handles everything..."
+            ></textarea>
 
             {/* Generate Button */}
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className={`group relative w-full py-5 rounded-2xl font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-3 overflow-hidden ${isGenerating ? 'bg-cyan-900/30 text-cyan-300 border border-cyan-500/30' : 'bg-white text-black hover:scale-[1.01] shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(6,182,212,0.3)] active:scale-95'}`}
-            >
-              {!isGenerating && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />}
-              
-              {isGenerating ? (
-                <>
-                  <div className="relative">
-                    <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
-                    <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-b-blue-400 rounded-full animate-spin-reverse"></div>
-                  </div>
-                  <span className="font-mono tracking-wider text-sm">{typingText || 'Initializing...'}</span>
-                  <span className="animate-pulse">|</span>
-                </>
-              ) : (
-                <>
-                  <span className="relative z-10">Initialize Engine</span>
-                  <svg className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                </>
-              )}
-            </button>
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-end border-t border-white/5 pt-6 gap-4">
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className={`group relative px-10 py-4 rounded-xl font-extrabold text-sm uppercase tracking-wider transition-all duration-300 overflow-hidden ${isGenerating ? 'bg-cyan-900/30 text-cyan-300 border border-cyan-500/30' : 'bg-white text-black hover:scale-[1.03] shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(6,182,212,0.3)]'}`}
+              >
+                {!isGenerating && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />}
+                
+                {isGenerating ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <div className="relative">
+                      <div className="w-5 h-5 border-2 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
+                    </div>
+                    <span className="font-mono tracking-wider text-sm">{typingText || 'Initializing...'}</span>
+                    <span className="animate-pulse">|</span>
+                  </span>
+                ) : (
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    Initialize Engine
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 

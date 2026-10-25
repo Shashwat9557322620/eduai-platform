@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+const resend = new Resend(process.env.RESEND_API_KEY);
 import { verifyAdminAuth, unauthorizedResponse } from '@/lib/adminAuth';
 import { rateLimit } from '@/lib/rateLimit';
 import { headers } from 'next/headers';
@@ -60,18 +61,8 @@ export async function PATCH(req: Request) {
     // Send email notification if status changed and we have a response
     if (status && ticket?.user_email && (adminResponse || status === 'resolved')) {
       try {
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST || 'smtp.gmail.com',
-          port: parseInt(process.env.SMTP_PORT || '587'),
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-        });
-
-        await transporter.sendMail({
-          from: process.env.SMTP_FROM || '"EduAI Support" <noreply@eduai.com>',
+        await resend.emails.send({
+          from: 'EduAI <onboarding@resend.dev>',
           to: ticket.user_email,
           subject: `Support Ticket #${ticket.tracking_id} - Status Updated`,
           html: `

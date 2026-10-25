@@ -57,7 +57,9 @@ function ParticleGalaxy() {
     <group rotation={[Math.PI / 6, 0, 0]}>
       <points ref={ref}>
         <bufferGeometry>
+          {/* @ts-expect-error R3F bufferAttribute typing requires args but attach works without it */}
           <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
+          {/* @ts-expect-error R3F bufferAttribute typing requires args but attach works without it */}
           <bufferAttribute attach="attributes-color" count={particleCount} array={colors} itemSize={3} />
         </bufferGeometry>
         <pointsMaterial size={0.15} vertexColors transparent depthWrite={false} blending={THREE.AdditiveBlending} />

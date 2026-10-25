@@ -7,6 +7,8 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import ShareButton from '../components/ShareButton';
 import CopyFullContent from '../components/CopyFullContent';
 import RatingWidget from '../components/RatingWidget';
+import AdvancedImportButton from '../components/AdvancedImportButton';
+import { Paperclip, FileText, Image as ImageIcon, X } from 'lucide-react';
 
 interface Flashcard {
   front: string;
@@ -23,6 +25,29 @@ export default function FlashcardGenerator() {
   const [typingText, setTypingText] = useState('');
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setAttachedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
 
   // Typing animation for loading state
   useEffect(() => {
@@ -58,18 +83,37 @@ export default function FlashcardGenerator() {
 
   const handleGenerate = async () => {
     setError(null);
-    if (!text.trim()) {
-      setError("SYSTEM ALERT: Please enter some text to generate flashcards!");
+    if (!text.trim() && attachedFiles.length === 0) {
+      setError("SYSTEM ALERT: Please enter text or import a file to generate flashcards!");
       return;
     }
     setLoading(true);
     setCards([]);
     setFlipped(new Set());
     try {
+      const images: {mimeType: string, data: string}[] = [];
+      let extraText = "";
+
+      for (const file of attachedFiles) {
+        if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+          const b64 = await fileToBase64(file);
+          images.push({ mimeType: file.type, data: b64 });
+        } else if (file.type === 'text/plain') {
+          const fileText = await file.text();
+          extraText += "\n\n" + fileText;
+        }
+      }
+
+      const finalText = text + extraText;
+      const userApiKey = localStorage.getItem('gemini_api_key');
+
       const response = await fetch('/api/flashcards', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, userId: user?.id }),
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(userApiKey ? { 'x-user-gemini-key': userApiKey } : {})
+        },
+        body: JSON.stringify({ text: finalText, images, userId: user?.id }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
@@ -88,18 +132,6 @@ export default function FlashcardGenerator() {
       next.has(index) ? next.delete(index) : next.add(index);
       return next;
     });
-  };
-
-  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      setText(content);
-    };
-    reader.readAsText(file);
-    e.target.value = '';
   };
 
   return (
@@ -146,36 +178,50 @@ export default function FlashcardGenerator() {
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
               </div>
-              <span className="text-xs font-mono text-purple-400/70 tracking-widest">neural_card_forge.py</span>
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-mono text-purple-400/70 tracking-widest hidden sm:inline-block">neural_card_forge.py</span>
+                <AdvancedImportButton onFileChange={handleFileChange} />
+              </div>
             </div>
+
+            {attachedFiles.length > 0 && (
+              <div className="flex gap-3 mb-4 px-1 overflow-x-auto custom-scrollbar pb-2">
+                {attachedFiles.map((file, i) => {
+                  const isImage = file.type.startsWith('image/');
+                  const fileUrl = URL.createObjectURL(file);
+                  return (
+                    <div key={i} className="relative group shrink-0 flex items-center justify-center bg-[#0a0a0f] border border-white/10 rounded-xl overflow-hidden hover:border-purple-500/50 transition-all cursor-pointer h-16 w-16" onClick={() => window.open(fileUrl, '_blank')} title="Click to view file">
+                      {isImage ? (
+                        <img src={fileUrl} alt={file.name} className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                      ) : (
+                        <div className="h-full w-full flex flex-col items-center justify-center bg-white/5 p-2">
+                          <FileText className="w-6 h-6 text-purple-400 mb-1" />
+                          <span className="text-[9px] font-mono text-gray-400 truncate w-full text-center">{file.name.split('.').pop()?.toUpperCase() || 'FILE'}</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-black/80 backdrop-blur-sm p-1 translate-y-full group-hover:translate-y-0 transition-transform">
+                        <p className="text-[8px] text-white truncate text-center font-mono">{file.name}</p>
+                      </div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); removeFile(i); }} 
+                        className="absolute bg-red-500/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 top-1 right-1 transition-all shadow-lg hover:bg-red-500 backdrop-blur-md"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             <textarea 
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="w-full h-[160px] bg-transparent text-gray-100 placeholder:text-gray-600 focus:outline-none resize-none text-xl leading-relaxed" 
+              className="w-full h-[160px] bg-transparent text-gray-100 placeholder:text-gray-600 focus:outline-none resize-none overflow-y-auto custom-scrollbar text-xl leading-relaxed" 
               placeholder="Paste your chaotic notes here... Physics, Coding, History... the Forge handles everything..."
             ></textarea>
             
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between border-t border-white/5 pt-6 gap-4">
-              
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileImport}
-                className="hidden"
-                accept=".txt,.md,.pdf,.docx"
-              />
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.06] hover:border-white/20 active:scale-95 overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <svg className="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-1 group-hover:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <span className="relative z-10">Import File</span>
-              </button>
-
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-end border-t border-white/5 pt-6 gap-4">
               <button 
                 onClick={handleGenerate}
                 disabled={loading}
@@ -263,7 +309,7 @@ export default function FlashcardGenerator() {
                       {/* Bottom Hint */}
                       <p className="absolute bottom-5 text-xs text-gray-600 z-10 font-medium flex items-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59-1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
                         </svg>
                         Click to reveal answer
                       </p>

@@ -26,6 +26,8 @@ import {
   RefreshCcw,
   ChevronRight,
   ExternalLink,
+  Users,
+  Briefcase,
   type LucideIcon
 } from "lucide-react";
 
@@ -674,6 +676,9 @@ export default function Footer() {
               <FooterLink href="/analyzer" icon={BarChart3} color="cyan">
                 Skill Gap Analyzer
               </FooterLink>
+              <FooterLink href="/institutes" icon={Users} color="cyan">
+                Group Pricing
+              </FooterLink>
             </ul>
           </div>
 
@@ -692,6 +697,9 @@ export default function Footer() {
               </FooterLink>
               <FooterLink href="/blog" icon={FileText} color="purple">
                 Blog
+              </FooterLink>
+              <FooterLink href="/affiliate" icon={Briefcase} color="purple">
+                Affiliate Program
               </FooterLink>
             </ul>
           </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Navbar from '../components/Navbar';
 import ReactMarkdown from 'react-markdown';
@@ -8,6 +8,8 @@ import ShareButton from '../components/ShareButton';
 import CopyFullContent from '../components/CopyFullContent';
 import RatingWidget from '../components/RatingWidget';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import AdvancedImportButton from '../components/AdvancedImportButton';
+import { Paperclip, FileText, Image as ImageIcon, X } from 'lucide-react';
 
 export default function SkillGapAnalyzer() {
   const { user } = useUser();
@@ -18,6 +20,19 @@ export default function SkillGapAnalyzer() {
   const [error, setError] = useState<string | null>(null);
   const [typingText, setTypingText] = useState('');
   const [activeTab, setActiveTab] = useState<'input' | 'results'>('input');
+  
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setAttachedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Typing animation for loading state
   useEffect(() => {
@@ -51,10 +66,22 @@ export default function SkillGapAnalyzer() {
     return () => clearInterval(typeInterval);
   }, [loading]);
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const handleAnalyze = async () => {
     setError(null);
-    if (!role.trim() || !skills.trim()) {
-      setError("SYSTEM ALERT: Please enter both Target Job Role and Current Skills!");
+    if (!role.trim() || (!skills.trim() && attachedFiles.length === 0)) {
+      setError("SYSTEM ALERT: Please enter Target Job Role and provide Skills (Text or File)!");
       return;
     }
 
@@ -63,10 +90,29 @@ export default function SkillGapAnalyzer() {
     setActiveTab('results');
 
     try {
+      const images: {mimeType: string, data: string}[] = [];
+      let extraText = "";
+
+      for (const file of attachedFiles) {
+        if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+          const b64 = await fileToBase64(file);
+          images.push({ mimeType: file.type, data: b64 });
+        } else if (file.type === 'text/plain') {
+          const text = await file.text();
+          extraText += "\n\n" + text;
+        }
+      }
+
+      const finalSkillsText = skills + extraText;
+      const userApiKey = localStorage.getItem('gemini_api_key');
+
       const response = await fetch('/api/analyzer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role, skills, userId: user?.id }),
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(userApiKey ? { 'x-user-gemini-key': userApiKey } : {})
+        },
+        body: JSON.stringify({ role, skills: finalSkillsText, images, userId: user?.id }),
       });
 
       const data = await response.json();
@@ -154,14 +200,48 @@ export default function SkillGapAnalyzer() {
                   />
                 </div>
 
-                <div className="relative flex-1 flex flex-col">
-                  <label className="flex items-center gap-2 text-xs font-mono text-gray-400 mb-3 uppercase tracking-widest font-bold">
-                    <span className="text-fuchsia-400">02 //</span> Current Skills / Resume
-                  </label>
+                <div className="relative flex-1 flex flex-col bg-white/[0.03] border border-white/10 rounded-xl p-5 transition-all focus-within:border-fuchsia-500 focus-within:bg-fuchsia-500/5 focus-within:shadow-[0_0_20px_rgba(217,70,239,0.2)]">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="flex items-center gap-2 text-xs font-mono text-gray-400 uppercase tracking-widest font-bold">
+                      <span className="text-fuchsia-400">02 //</span> Current Skills / Resume
+                    </label>
+                    <AdvancedImportButton onFileChange={handleFileChange} />
+                  </div>
+                  
+                  {attachedFiles.length > 0 && (
+                    <div className="flex gap-3 mb-3 px-1 overflow-x-auto custom-scrollbar pb-2 pt-1">
+                      {attachedFiles.map((file, i) => {
+                        const isImage = file.type.startsWith('image/');
+                        const fileUrl = URL.createObjectURL(file);
+                        return (
+                          <div key={i} className="relative group shrink-0 flex items-center justify-center bg-[#0a0a0f] border border-white/10 rounded-xl overflow-hidden hover:border-fuchsia-500/50 transition-all cursor-pointer h-16 w-16" onClick={() => window.open(fileUrl, '_blank')} title="Click to view file">
+                            {isImage ? (
+                              <img src={fileUrl} alt={file.name} className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                            ) : (
+                              <div className="h-full w-full flex flex-col items-center justify-center bg-white/5 p-2">
+                                <FileText className="w-6 h-6 text-fuchsia-400 mb-1" />
+                                <span className="text-[9px] font-mono text-gray-400 truncate w-full text-center">{file.name.split('.').pop()?.toUpperCase() || 'FILE'}</span>
+                              </div>
+                            )}
+                            <div className="absolute inset-x-0 bottom-0 bg-black/80 backdrop-blur-sm p-1 translate-y-full group-hover:translate-y-0 transition-transform">
+                              <p className="text-[8px] text-white truncate text-center font-mono">{file.name}</p>
+                            </div>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); removeFile(i); }} 
+                              className="absolute bg-red-500/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 top-1 right-1 transition-all shadow-lg hover:bg-red-500 backdrop-blur-md"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   <textarea 
                     value={skills}
                     onChange={(e) => setSkills(e.target.value)}
-                    className="w-full flex-1 min-h-[220px] bg-white/[0.03] border border-white/10 rounded-xl p-5 text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-fuchsia-500 focus:bg-fuchsia-500/5 focus:shadow-[0_0_20px_rgba(217,70,239,0.2)] transition-all resize-none text-base leading-relaxed font-medium" 
+                    className="w-full flex-1 min-h-[160px] bg-transparent text-gray-200 placeholder:text-gray-600 focus:outline-none resize-none overflow-y-auto custom-scrollbar text-base leading-relaxed font-medium" 
                     placeholder="Paste your current tech stack, soft skills, or entire resume text here..."
                   ></textarea>
                 </div>

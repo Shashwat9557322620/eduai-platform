@@ -1,13 +1,21 @@
 import { z } from 'zod';
 
 export const flashcardSchema = z.object({
-  text: z.string().min(10).max(10000),
+  text: z.string().max(10000).optional(),
+  images: z.array(z.object({
+    mimeType: z.string(),
+    data: z.string(),
+  })).optional(),
   userId: z.string().optional(),
 });
 
 export const analyzeSchema = z.object({
   role: z.string().min(2).max(100),
-  skills: z.string().min(10).max(5000),
+  skills: z.string().max(10000).optional(),
+  images: z.array(z.object({
+    mimeType: z.string(),
+    data: z.string(),
+  })).optional(),
   userId: z.string().optional(),
 });
 
@@ -15,6 +23,10 @@ export const generateSchema = z.object({
   syllabus: z.string().min(10).max(10000),
   days: z.union([z.string(), z.number()]).transform(String),
   targetDays: z.union([z.string(), z.number()]).transform(String).optional(),
+  images: z.array(z.object({
+    mimeType: z.string(),
+    data: z.string(),
+  })).optional(),
   userId: z.string().optional(),
 });
 

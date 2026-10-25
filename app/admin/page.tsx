@@ -23,6 +23,8 @@ export default function AdminDashboard() {
   const [loginLocked, setLoginLocked] = useState(false);
   const [showAdminNote, setShowAdminNote] = useState<{id: number; action: string} | null>(null);
   const [adminNote, setAdminNote] = useState('');
+  const [showTicketResponse, setShowTicketResponse] = useState<any | null>(null);
+  const [ticketResponse, setTicketResponse] = useState('');
   const [adminKey, setAdminKey] = useState('');
   
   // User management state
@@ -183,6 +185,27 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Refund action error:', err);
+    }
+  };
+
+  const handleTicketAction = async (ticketId: number, status: string) => {
+    if (!ticketResponse.trim() && status === 'resolved') {
+      alert('Please provide a response before resolving.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/admin/tickets', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ ticketId, status, adminResponse: ticketResponse.trim() }),
+      });
+      if (res.ok) {
+        setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status, admin_response: ticketResponse.trim() } : t));
+        setShowTicketResponse(null);
+        setTicketResponse('');
+      }
+    } catch (err) {
+      console.error('Ticket action error:', err);
     }
   };
 
@@ -398,8 +421,46 @@ export default function AdminDashboard() {
                     </div>
                   )}
                   <p className="text-[10px] text-gray-600 mt-2 font-mono">From: {ticket.user_email || 'anonymous'}</p>
+                  
+                  <div className="mt-3 flex gap-2 border-t border-white/5 pt-3">
+                    {ticket.status !== 'resolved' && (
+                      <button
+                        onClick={() => { setShowTicketResponse(ticket); setTicketResponse(''); }}
+                        className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-200"
+                      >
+                        Reply / Resolve
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Ticket Response Modal */}
+          {showTicketResponse && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowTicketResponse(null)}>
+              <div className="bg-[#07070a] border border-white/10 rounded-3xl p-8 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
+                <h3 className="text-lg font-bold text-white mb-2">Respond to Ticket</h3>
+                <p className="text-xs text-gray-500 mb-6">Responding will update the ticket status to resolved.</p>
+                <textarea
+                  value={ticketResponse}
+                  onChange={(e) => setTicketResponse(e.target.value)}
+                  placeholder="Your response..."
+                  rows={4}
+                  className="w-full bg-[#020203] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 text-sm mb-4 resize-none"
+                  autoFocus
+                />
+                <div className="flex gap-3">
+                  <button onClick={() => setShowTicketResponse(null)} className="flex-1 py-3 rounded-xl text-sm font-bold border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 hover:scale-[1.02] active:scale-95 transition-all duration-200">Cancel</button>
+                  <button
+                    onClick={() => handleTicketAction(showTicketResponse.id, 'resolved')}
+                    className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
+                  >
+                    ✅ Submit Response
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

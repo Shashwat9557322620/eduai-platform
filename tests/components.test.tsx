@@ -102,10 +102,10 @@ describe('Validation schemas', () => {
     expect(result.success).toBe(true);
   });
 
-  it('flashcardSchema rejects short text', async () => {
+  it('flashcardSchema accepts short text', async () => {
     const { flashcardSchema } = await import('../lib/validation');
     const result = flashcardSchema.safeParse({ text: 'hi' });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it('analyzeSchema validates correct input', async () => {

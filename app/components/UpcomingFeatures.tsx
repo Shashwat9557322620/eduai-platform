@@ -39,7 +39,7 @@ export default function UpcomingFeatures() {
   return (
     <section className="w-full max-w-7xl mx-auto px-6 py-24 relative z-10" id="upcoming">
       <div className="text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] text-xs font-bold tracking-widest text-gray-400 mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] text-xs font-bold tracking-widest text-gray-400 mb-6 label-pop-in">
           <Rocket className="w-3.5 h-3.5 text-orange-400" />
           ON THE HORIZON
         </div>
@@ -68,16 +68,16 @@ export default function UpcomingFeatures() {
             >
               {/* Card */}
               <div className="relative h-full bg-[#07070a]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-7 transition-all duration-500 group-hover:border-white/[0.12] group-hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] group-hover:-translate-y-1 overflow-hidden">
-                
+
                 {/* Top accent line */}
                 <div className="h-[2px] w-10 rounded-full mb-5 transition-all duration-500 group-hover:w-full" style={{ background: feature.color }} />
 
                 {/* Status badge */}
                 <div className="flex items-center gap-2 mb-4">
-                  <span 
+                  <span
                     className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-full border"
-                    style={{ 
-                      color: feature.color, 
+                    style={{
+                      color: feature.color,
                       borderColor: `${feature.color}30`,
                       background: `${feature.color}10`
                     }}
@@ -91,13 +91,13 @@ export default function UpcomingFeatures() {
 
                 {/* Icon */}
                 <div className="relative mb-5">
-                  <div 
+                  <div
                     className="absolute inset-0 rounded-xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-500"
                     style={{ background: feature.color }}
                   />
-                  <div 
+                  <div
                     className="relative w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-300"
-                    style={{ 
+                    style={{
                       background: `${feature.color}10`,
                       borderColor: `${feature.color}25`
                     }}
@@ -143,7 +143,7 @@ export default function UpcomingFeatures() {
       </div>
 
       {/* CTA Banner */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -153,12 +153,12 @@ export default function UpcomingFeatures() {
         <h3 className="text-xl font-bold text-white mb-2">Want early access?</h3>
         <p className="text-gray-400 text-sm mb-4">Subscribe to get notified when these features launch. Early adopters get exclusive perks.</p>
         <div className="flex items-center justify-center gap-3">
-          <input suppressHydrationWarning 
-            type="email" 
-            placeholder="your@email.com" 
+          <input suppressHydrationWarning
+            type="email"
+            placeholder="your@email.com"
             className="bg-[#020203] border border-white/10 rounded-xl px-5 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 w-64"
           />
-          <button suppressHydrationWarning className="px-6 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(249,115,22,0.2)]">
+          <button suppressHydrationWarning className="px-6 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(249,115,22,0.2)] cta-shimmer">
             Notify Me
           </button>
         </div>

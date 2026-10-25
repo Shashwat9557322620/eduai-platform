@@ -12,32 +12,11 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, RadarChart, PolarGrid, PolarAngleAxis, Radar
 } from 'recharts';
+import ReferralCard from '../components/ReferralCard';
 
-// ── Deterministic Data ──────────────────────────────────────
-const STREAK_DAYS = 7;
-const HEATMAP_DATA = [
-  { day: 'Mon', hours: 2.5 }, { day: 'Tue', hours: 3.1 },
-  { day: 'Wed', hours: 1.8 }, { day: 'Thu', hours: 4.2 },
-  { day: 'Fri', hours: 2.9 }, { day: 'Sat', hours: 5.0 },
-  { day: 'Sun', hours: 3.5 },
-];
+// ── Removed Fake Data ──────────────────────────────────────
+// Achievements, Streaks, Heatmaps, and Skill Radar removed per Phase 13.
 
-const SKILL_RADAR = [
-  { subject: 'Math', A: 85 }, { subject: 'Physics', A: 72 },
-  { subject: 'Chemistry', A: 68 }, { subject: 'CS', A: 92 },
-  { subject: 'English', A: 78 }, { subject: 'History', A: 60 },
-];
-
-const ACHIEVEMENTS = [
-  { id: 'first-use', title: 'First Steps', desc: 'Used your first AI tool', icon: '🚀', color: '#06b6d4', unlocked: true },
-  { id: 'week-streak', title: '7-Day Warrior', desc: 'Maintained a 7-day streak', icon: '🔥', color: '#f59e0b', unlocked: true },
-  { id: 'flashcard-master', title: 'Card Master', desc: 'Created 100+ flashcards', icon: '🃏', color: '#a855f7', unlocked: true },
-  { id: 'optimizer-pro', title: 'Plan Architect', desc: 'Generated 10 study plans', icon: '📋', color: '#10b981', unlocked: false },
-  { id: 'analyzer-ace', title: 'Skill Scout', desc: 'Analyzed 5 job descriptions', icon: '🎯', color: '#ec4899', unlocked: false },
-  { id: 'podcast-pioneer', title: 'Audio Learner', desc: 'Created 5 podcasts', icon: '🎙️', color: '#6366f1', unlocked: false },
-  { id: 'night-owl', title: 'Night Owl', desc: 'Studied past midnight', icon: '🦉', color: '#8b5cf6', unlocked: true },
-  { id: 'century', title: 'Century Club', desc: 'Used 100+ credits', icon: '💯', color: '#ef4444', unlocked: false },
-];
 
 // ── Stat Card ─────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, accent, delay, sub }: {
@@ -102,161 +81,7 @@ function StatCard({ icon: Icon, label, value, accent, delay, sub }: {
   );
 }
 
-// ── Streak Component ──────────────────────────────────────
-function StreakDisplay({ streak }: { streak: number }) {
-  return (
-    <motion.div
-      className="relative overflow-hidden"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-red-500/5 to-amber-500/10 rounded-3xl" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl" />
-      <div className="relative bg-[#0a0a0f]/90 border border-orange-500/20 rounded-3xl p-8 backdrop-blur-xl">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Flame className="w-5 h-5 text-orange-400" />
-              <span className="text-xs font-mono text-orange-400 uppercase tracking-widest">Study Streak</span>
-            </div>
-            <div className="text-5xl font-black text-white font-mono">
-              {streak}<span className="text-lg text-orange-400 ml-1">days</span>
-            </div>
-          </div>
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 flex items-center justify-center">
-            <Flame className="w-8 h-8 text-orange-400" />
-          </div>
-        </div>
-        <div className="flex gap-2">
-          {[...Array(7)].map((_, i) => (
-            <div key={i} className="flex-1 text-center">
-              <div className={`h-12 rounded-xl mb-1.5 flex items-center justify-center text-lg ${
-                i < streak ? 'bg-gradient-to-b from-orange-500/30 to-orange-500/10 border border-orange-500/30' : 'bg-white/[0.03] border border-white/5'
-              }`}>
-                {i < streak ? '🔥' : '·'}
-              </div>
-              <span className="text-[9px] font-mono text-gray-600">
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
-              </span>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-gray-500 mt-4 text-center">
-          {streak >= 7 ? '🏆 Amazing! Keep it going!' : `${7 - streak} more days to unlock 7-day achievement`}
-        </p>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Achievements Component ────────────────────────────────
-function AchievementsGrid() {
-  const unlocked = ACHIEVEMENTS.filter(a => a.unlocked).length;
-  return (
-    <motion.div
-      className="bg-[#0a0a0f] border border-white/[0.06] rounded-3xl p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
-    >
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-sm font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-yellow-400" /> Achievements
-        </h3>
-        <span className="text-xs font-mono text-gray-500">{unlocked}/{ACHIEVEMENTS.length}</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {ACHIEVEMENTS.map((a, i) => (
-          <motion.div
-            key={a.id}
-            className={`relative rounded-xl p-3 text-center transition-all duration-300 ${
-              a.unlocked
-                ? 'bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.15]'
-                : 'bg-white/[0.01] border border-white/[0.03] opacity-40'
-            }`}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: a.unlocked ? 1 : 0.4, scale: 1 }}
-            transition={{ delay: 0.4 + i * 0.05 }}
-          >
-            <div className="text-2xl mb-1.5">{a.icon}</div>
-            <p className="text-[10px] font-bold text-white leading-tight">{a.title}</p>
-            <p className="text-[9px] text-gray-500 mt-0.5 leading-tight">{a.desc}</p>
-            {a.unlocked && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-[#0a0a0f] flex items-center justify-center">
-                <span className="text-[8px] text-white">✓</span>
-              </div>
-            )}
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Weekly Heatmap ────────────────────────────────────────
-function WeeklyHeatmap() {
-  const maxHours = Math.max(...HEATMAP_DATA.map(d => d.hours));
-  return (
-    <motion.div
-      className="bg-[#0a0a0f] border border-white/[0.06] rounded-3xl p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.25, duration: 0.5 }}
-    >
-      <h3 className="text-sm font-bold text-gray-300 uppercase tracking-widest mb-4 flex items-center gap-2">
-        <Calendar className="w-4 h-4 text-cyan-400" /> Weekly Activity
-      </h3>
-      <div className="flex items-end gap-3 h-40">
-        {HEATMAP_DATA.map((d, i) => {
-          const height = (d.hours / maxHours) * 100;
-          return (
-            <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
-              <span className="text-[10px] font-mono text-gray-400">{d.hours}h</span>
-              <motion.div
-                className="w-full rounded-xl bg-gradient-to-t from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20 relative overflow-hidden"
-                style={{ height: `${height}%`, minHeight: '8px' }}
-                initial={{ height: 0 }}
-                animate={{ height: `${height}%` }}
-                transition={{ delay: 0.4 + i * 0.06, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/30 to-transparent" />
-              </motion.div>
-              <span className="text-[10px] font-mono text-gray-600">{d.day}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-        <span className="text-[10px] text-gray-500">Total this week</span>
-        <span className="text-sm font-bold text-cyan-400 font-mono">{HEATMAP_DATA.reduce((s, d) => s + d.hours, 0).toFixed(1)}h</span>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Skill Radar ───────────────────────────────────────────
-function SkillRadar() {
-  return (
-    <motion.div
-      className="bg-[#0a0a0f] border border-white/[0.06] rounded-3xl p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.35, duration: 0.5 }}
-    >
-      <h3 className="text-sm font-bold text-gray-300 uppercase tracking-widest mb-4 flex items-center gap-2">
-        <Brain className="w-4 h-4 text-purple-400" /> Skill Profile
-      </h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <RadarChart data={SKILL_RADAR}>
-          <PolarGrid stroke="#ffffff10" />
-          <PolarAngleAxis dataKey="subject" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-          <Radar name="Skills" dataKey="A" stroke="#a855f7" fill="#a855f7" fillOpacity={0.2} strokeWidth={2} />
-        </RadarChart>
-      </ResponsiveContainer>
-    </motion.div>
-  );
-}
+// Legacy fake components removed
 
 // ── Custom Tooltip ────────────────────────────────────────
 function CustomTooltip({ active, payload, label }: any) {
@@ -295,7 +120,6 @@ export default function Dashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [refunds, setRefunds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [streak] = useState(STREAK_DAYS);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) { router.push('/'); return; }
@@ -389,12 +213,6 @@ export default function Dashboard() {
               <StatCard icon={Activity} label="Active Plan" value={planName} accent="#34d399" delay={0.24} />
             </div>
 
-            {/* ── Streak + Weekly Activity ─────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <StreakDisplay streak={streak} />
-              <WeeklyHeatmap />
-            </div>
-
             {/* ── Charts Row ──────────────────────────────── */}
             {chartData.length > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -453,9 +271,8 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* ── Skill Radar + Achievements ───────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <SkillRadar />
+            {/* ── Quick Actions ───────────────── */}
+            <div className="grid grid-cols-1 gap-6 mb-8">
               <motion.div
                 className="bg-[#0a0a0f] border border-white/[0.06] rounded-3xl p-6"
                 initial={{ opacity: 0, y: 20 }}
@@ -465,7 +282,7 @@ export default function Dashboard() {
                 <h3 className="text-sm font-bold text-gray-300 uppercase tracking-widest mb-4 flex items-center gap-2">
                   <Award className="w-4 h-4 text-yellow-400" /> Quick Actions
                 </h3>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
                     { href: '/optimizer', label: 'Generate Study Plan', icon: '📋', color: 'cyan' },
                     { href: '/flashcards', label: 'Create Flashcards', icon: '🃏', color: 'purple' },
@@ -473,9 +290,9 @@ export default function Dashboard() {
                     { href: '/podcast', label: 'Generate Podcast', icon: '🎙️', color: 'amber' },
                   ].map((item, i) => (
                     <a key={item.href} href={item.href}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-300 group"
+                      className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-300 group"
                     >
-                      <span className="text-xl">{item.icon}</span>
+                      <span className="text-2xl">{item.icon}</span>
                       <span className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">{item.label}</span>
                       <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-gray-400 ml-auto transition-colors" />
                     </a>
@@ -484,18 +301,40 @@ export default function Dashboard() {
               </motion.div>
             </div>
 
-            {/* ── Achievements ────────────────────────────── */}
-            <div className="mb-8">
-              <AchievementsGrid />
-            </div>
-
-            {/* ── Credits Card ────────────────────────────── */}
+            {/* ── Credits Card (with upgrade nudge when low) ──── */}
             <motion.div
               className="relative max-w-2xl mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35, duration: 0.5 }}
             >
+              {credits <= 10 && credits > 0 && (
+                <motion.div
+                  className="mb-3 flex items-center gap-3 px-5 py-3 rounded-2xl border"
+                  style={{
+                    backgroundColor: credits <= 3 ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
+                    borderColor: credits <= 3 ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)',
+                  }}
+                  animate={{ boxShadow: credits <= 3 ? ['0 0 0px rgba(239,68,68,0)', '0 0 20px rgba(239,68,68,0.15)', '0 0 0px rgba(239,68,68,0)'] : [] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Zap className="w-4 h-4 flex-shrink-0" style={{ color: credits <= 3 ? '#ef4444' : '#f59e0b' }} />
+                  <p className="text-sm flex-1" style={{ color: credits <= 3 ? '#fca5a5' : '#fcd34d' }}>
+                    {credits <= 3
+                      ? `🚨 Only ${credits} credit${credits === 1 ? '' : 's'} left — you're about to lose AI access!`
+                      : `⚡ ${credits} credits left — top up before you run out`
+                    }
+                  </p>
+                  <a
+                    href="/billing"
+                    className="flex-shrink-0 px-4 py-1.5 rounded-xl text-xs font-bold text-black transition-all hover:scale-105"
+                    style={{ background: credits <= 3 ? '#ef4444' : '#f59e0b' }}
+                  >
+                    Upgrade →
+                  </a>
+                </motion.div>
+              )}
+
               <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl opacity-60 animate-pulse-soft" />
               <div className="relative bg-[#0a0a0f] border border-white/10 rounded-3xl p-8">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -530,6 +369,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </motion.div>
+
 
             {/* ── Usage History Table ──────────────────────── */}
             <motion.div
@@ -663,6 +503,11 @@ export default function Dashboard() {
                   </div>
                 )}
               </motion.div>
+            </div>
+
+            {/* ── Referrals ────────────────────────────── */}
+            <div className="mt-8 mb-8">
+              <ReferralCard />
             </div>
 
             {user?.id === process.env.NEXT_PUBLIC_ADMIN_USER_ID && (
